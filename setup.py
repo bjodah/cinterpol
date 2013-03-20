@@ -1,21 +1,19 @@
 from distutils.core import setup
 from distutils.extension import Extension
-from Cython.Distutils import build_ext
 
-from poly_coeff_expr import coeff_expr
-from mako.template import Template
+try:
+    from Cython.Distutils import build_ext
+except ImportError:
+    use_cython = False
+else:
+    from cinterpol.poly_coeff_expr import coeff_expr, render_mako_template_to
+    use_cython = True
 
 import numpy as np
 
-mako_targets = {'poly_coeff{}.c'.format(i): ('poly_coeffX.c.mako', coeff_expr(i)) for i \
+mako_targets = {'cinterpol/poly_coeff{}.c'.format(i): (
+    'cinterpol/poly_coeffX.c.mako', coeff_expr(i)) for i \
                 in range(1, 6, 2)}
-
-def render_mako_template_to(template_path, outpath, subsd):
-    template_str = open(template_path, 'rt').read()
-    ofh = open(outpath, 'wt')
-    ofh.write(Template(template_str).render(**subsd))
-    ofh.close()
-
 
 class my_build_ext(build_ext):
     """Subclassing according to modified:
@@ -32,10 +30,25 @@ class my_build_ext(build_ext):
         # distutils uses old-style classes, so no super()
         build_ext.run(self)
 
-setup(
-    cmdclass = {'build_ext': my_build_ext},
-    include_dirs =  [np.get_include()],
-    ext_modules = [Extension("cinterpol", ["cinterpol.pyx", 'newton_interval.c'] +\
-                             mako_targets.keys())],
-)
 
+cmdclass = {}
+ext_modules = []
+
+if use_cython:
+    ext_modules += [
+        Extension("cinterpol.core", mako_targets.keys() + [
+            "cinterpol/core.pyx", 'cinterpol/newton_interval.c']),
+    ]
+    cmdclass.update({ 'build_ext': my_build_ext })
+else:
+    ext_modules += [
+        Extension("cinterpol.core", [ "cinterpol/core.c" ]),
+    ]
+
+setup(
+    name='cinterpol',
+    cmdclass = cmdclass,
+    ext_modules=ext_modules,
+    include_dirs=[np.get_include()],
+    packages = ['cinterpol']
+)

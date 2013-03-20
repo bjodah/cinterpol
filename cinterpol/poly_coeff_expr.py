@@ -4,6 +4,15 @@
 import sympy
 import re
 
+from mako.template import Template
+
+def render_mako_template_to(template_path, outpath, subsd):
+    template_str = open(template_path, 'rt').read()
+    ofh = open(outpath, 'wt')
+    ofh.write(Template(template_str).render(**subsd))
+    ofh.close()
+
+
 class Polynomial(object):
 
     x = sympy.Symbol('x', real = True)

@@ -8,7 +8,7 @@ cdef extern size_t poly_coeff5(double t[], double y[], double c[], size_t nt)
 
 cdef class PieceWisePolyInterpol:
     """
-    Trajectory class
+    PieceWisePolyInterpol class
     """
     cdef double [:] t
     cdef double [:,:] c
@@ -39,7 +39,7 @@ cdef class PieceWisePolyInterpol:
         elif y.shape[1] == 3:
             poly_coeff5(&t[0], &y[0, 0], &c_view[0, 0], len(t))
         print str(t.shape[0])
-        return Traj(t, c)
+        return PieceWisePolyInterpol(t, c)
 
     def __call__(self, t):
         if not isinstance(t, np.ndarray):
