@@ -10,12 +10,15 @@ void poly_coeff1(double t[], double y[], double c[], size_t nt){
   */
   size_t i;
   double dt;
+  /* BEGIN MAKO TEMPLATE */
+  /* END MAKO TEMPLATE */
   for (i=0; i < (nt-1); ++i)
     {
       dt = t[i+1]-t[i];
       /* BEGIN MAKO TEMPLATE */
+
       c[i*2+0] = y[i*1+0];
-      c[i*2+1] = (-y[i*1+0] + y[(i+1)*1+0])/dt;
+      c[i*2+1] = (y[(i+1)*1+0] - y[i*1+0])/dt;
       /* END MAKO TEMPLATE */
     }
   /* Last coefficient is half order (extrapolation solely on last point in series)*/

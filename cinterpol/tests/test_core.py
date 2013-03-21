@@ -22,5 +22,12 @@ def test_PieceWisePolyInterpol_mk_from_data():
     exact_y = t_series ** 3
     assert np.allclose(exact_y, interpol_y)
 
+
+def test_PieceWisePolyInterpol_call():
+    pwpi=cinterpol.PieceWisePolyInterpol.mk_from_array(np.array([0.0,1.0]),np.array([[0.0],[1.0]]))
+    assert pwpi(0.5) == 0.5
+
 if __name__ == '__main__':
     test_PieceWisePolyInterpol_mk_from_data()
+    test_PieceWisePolyInterpol_call()
+
