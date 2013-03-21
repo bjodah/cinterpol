@@ -1,2 +1,4 @@
 build/
 cinterpol/*.pyc
+cinterpol/*.so
+cinterpol/tests/__pycache__
