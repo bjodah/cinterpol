@@ -38,7 +38,6 @@ cdef class PieceWisePolyInterpol:
             poly_coeff3(&t[0], &y[0, 0], &c_view[0, 0], len(t))
         elif y.shape[1] == 3:
             poly_coeff5(&t[0], &y[0, 0], &c_view[0, 0], len(t))
-        print str(t.shape[0])
         return PieceWisePolyInterpol(t, c)
 
     def __call__(self, t):
@@ -75,17 +74,3 @@ cdef class PieceWisePolyInterpol:
     def get_t(self):
         return np.array(self.t)
 
-    # def inspect_t(self):
-    #     cdef double * u
-    #     u = &self.t[0]
-    #     for i in range(len(self.t)):
-    #         print str(u[i])
-
-    # def inspect_c(self):
-    #     cdef double * u
-    #     u = &self.c[0, 0]
-    #     cdef int wc = self.c.shape[1]
-    #     cdef int nt = self.c.shape[0]
-    #     for i in range(nt):
-    #         for j in range(wc):
-    #             print str(u[i * wc + j])
