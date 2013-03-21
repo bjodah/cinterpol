@@ -1,8 +1,5 @@
-#include <math.h>
-#include <stdbool.h> /* bool */
-#include <stdlib.h> /* size_t */
-
-size_t get_interval(double*, size_t, double);
+#include "newton_interval.h"
+/* #include <stdio.h> */
 
 size_t get_interval(double arr[], size_t N, double t){
   /*
@@ -20,8 +17,17 @@ size_t get_interval(double arr[], size_t N, double t){
   size_t upper_bound = N;
   bool gteq_ti;    /* t >= t[i] */
   bool lt_tip1;    /* t < t[i+1] */
+  bool eq_tip1;    /* t == t[i+1] */
+
+  /* i might max be N */
+  if (i > N - 2){
+    i = N - 2;
+  }
   gteq_ti = (t >= arr[i]);
   lt_tip1 = (t < arr[i + 1]);
+  eq_tip1 = (t == arr[i + 1]);
+
+  if (eq_tip1) return i + 1;
 
   while (!(gteq_ti & lt_tip1)){
     if (gteq_ti) {
@@ -50,6 +56,8 @@ size_t get_interval(double arr[], size_t N, double t){
     /* Update loop conditions; */
     gteq_ti = (t >= arr[i]);
     lt_tip1 = (t < arr[i + 1]);
+    eq_tip1 = (t == arr[i + 1]);
+    if (eq_tip1) return i + 1;
   }
   return i;
 }

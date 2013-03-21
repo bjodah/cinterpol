@@ -2,3 +2,5 @@ build/
 cinterpol/*.pyc
 cinterpol/*.so
 cinterpol/tests/__pycache__
+cinterpol/tests/test_newton_interval
+cinterpol/tests/*.pyc
