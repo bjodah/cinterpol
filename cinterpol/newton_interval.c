@@ -1,7 +1,7 @@
 #include "newton_interval.h"
 /* #include <stdio.h> */
 
-size_t get_interval(double arr[], size_t N, double t){
+size_t get_interval(const double arr[], const size_t N, const double t){
   /*
     get_interval locates the index `i` for which  is
       t > arr[i] and arr[i+1] > t
