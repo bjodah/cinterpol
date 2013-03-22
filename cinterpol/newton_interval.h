@@ -3,5 +3,5 @@
 #include <math.h>    /* sqrt() round() */
 #include <stdlib.h>  /* size_t */
 #include <stdbool.h> /* bool type */
-size_t get_interval(double*, size_t, double);
+size_t get_interval(const double arr[], const size_t N, const double t);
 #endif /* _NEWTON_INTERVAL_H_ */

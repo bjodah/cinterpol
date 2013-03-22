@@ -1,7 +1,11 @@
 import numpy as np
 cimport numpy as np
 
-cdef extern size_t get_interval(double arr[], size_t N, double t)
+# Cython 0.18 supposedly support const but I dont get it to work..
+# cdef extern from *:
+#     ctypedef double* const_double_ptr "const double*"
+
+cdef extern size_t get_interval(const double arr[], const size_t N, const double t)
 cdef extern size_t poly_coeff1(double t[], double y[], double c[], size_t nt)
 cdef extern size_t poly_coeff3(double t[], double y[], double c[], size_t nt)
 cdef extern size_t poly_coeff5(double t[], double y[], double c[], size_t nt)
@@ -48,7 +52,7 @@ cdef class PieceWisePolyInterpol:
             poly_coeff5(&t[0], &y[0, 0], &c_view[0, 0], len(t))
         return PieceWisePolyInterpol(t, c)
 
-    def __call__(self, t):
+    def __call__(self, double t):
         # These 3 are used in case of t is float
         cdef double y
         cdef size_t it
