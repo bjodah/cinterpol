@@ -4,7 +4,7 @@
 
 /* MAKO TEMPLATE INIT */
 
-void poly_coeff5(double t[], double y[], double c[], size_t nt){
+void poly_coeff5(const double t[], const double y[], double c[], const size_t nt){
   /*
     solve shifted first order coeff
   */

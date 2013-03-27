@@ -1,14 +1,12 @@
 import numpy as np
 cimport numpy as np
 
-# Cython 0.18 supposedly support const but I dont get it to work..
-# cdef extern from *:
-#     ctypedef double* const_double_ptr "const double*"
+# Cython 0.19-dev support const properly since 2013-03-26
 
 cdef extern size_t get_interval(const double arr[], const size_t N, const double t)
-cdef extern size_t poly_coeff1(double t[], double y[], double c[], size_t nt)
-cdef extern size_t poly_coeff3(double t[], double y[], double c[], size_t nt)
-cdef extern size_t poly_coeff5(double t[], double y[], double c[], size_t nt)
+cdef extern void poly_coeff1(const double t[], const double y[], double c[], const size_t nt)
+cdef extern void poly_coeff3(const double t[], const double y[], double c[], const size_t nt)
+cdef extern void poly_coeff5(const double t[], const double y[], double c[], const size_t nt)
 
 cdef class PieceWisePolyInterpol:
     """
@@ -52,7 +50,7 @@ cdef class PieceWisePolyInterpol:
             poly_coeff5(&t[0], &y[0, 0], &c_view[0, 0], len(t))
         return PieceWisePolyInterpol(t, c)
 
-    def __call__(self, double t):
+    def __call__(self, t):
         # These 3 are used in case of t is float
         cdef double y
         cdef size_t it
@@ -66,13 +64,13 @@ cdef class PieceWisePolyInterpol:
                     raise ValueError('Out of bounds')
                 for j in range(self.order + 1):
                     y += (t - self.t[it]) ** j * self.c[it, j]
-                return y
+                return np.array(y, dtype = np.float64)
             t = np.array(t)
         yout = np.ascontiguousarray(np.zeros(t.shape, dtype = np.float64))
-        self.interpol(t, yout)
+        self._interpol(t, yout)
         return yout
 
-    def interpol(self, double [:] t, double [:] yout):
+    cdef _interpol(self, double [:] t, double [:] yout):
         """
         Modify `yout` inplace to store interpolated values at `t`
         """
@@ -82,7 +80,7 @@ cdef class PieceWisePolyInterpol:
         cdef size_t t_size = len(t)
         cdef double y = 0.0
 
-        if self.t[0] <= t[0] and t[0] <= self.t[-1]:
+        if self.t[0] <= t[0] and t[-1] <= self.t[-1]:
             it  = get_interval(&self.t[0], len(self.t), t[0])
         else:
             raise ValueError('Out of bounds')
@@ -98,15 +96,9 @@ cdef class PieceWisePolyInterpol:
             i += 1
 
     def __reduce__(self):
-
-        fused = np.empty((self.c.shape[0], self.c.shape[1] + 1), dtype = np.float64)
-        fused[:, 0] = self.t
-        fused[:, 1:] = self.c
-        return PieceWisePolyInterpol, (), fused
-
-    def __setstate__(self, fused):
-        self.t = fused[:, 0]
-        self.c = fused[:, 1:]
+        t = np.asarray(self.t)
+        c = np.asarray(self.c)
+        return PieceWisePolyInterpol, (t, c)
 
     # Diagnostics
     def get_c(self):
