@@ -9,7 +9,6 @@ import cPickle as pickle
 
 from cinterpol import PieceWisePolyInterpol
 
-
 def main(start=0, stop=20, Ncoarse=21, Nfine=1000):
     """
     """
@@ -24,15 +23,18 @@ def main(start=0, stop=20, Ncoarse=21, Nfine=1000):
     pickle.dump(pw, open('pw.pkl', 'wb'))#, protocol = 2)
     del pw
     pw = pickle.load(open('pw.pkl', 'rb'))
+
+    # Plot interpolation
     xfine = np.linspace(start, stop, Nfine)
-    ipy = pw(xfine)
-    plt.subplot(2, 1, 1)
+        plt.subplot(2, 1, 1)
+
     plt.plot(x, y0, '*', label = 'Data')
-    plt.plot(xfine, ipy, label='Interpolated')
+    plt.plot(xfine, pw(xfine), label='Interpolated')
     plt.plot(xfine, np.sin(xfine), label ='Analytic')
     plt.legend()
+
     plt.subplot(2, 1, 2)
-    plt.plot(xfine, np.sin(xfine) - ipy, label='Error')
+    plt.plot(xfine, np.sin(xfine) - pw(xfine), label='Error')
     plt.legend()
     plt.show()
 
