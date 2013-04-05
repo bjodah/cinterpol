@@ -18,8 +18,18 @@ void test2(){
   assert(i == 0);
 }
 
+void test3(){
+  double t[] = {0.0,1.0,2.0};
+  double ti = 0.9;
+  int i=-1;
+  i=(int)get_interval(t,3,ti);
+  assert(i == 0);
+}
+
+
 
 void main(){
   test1();
   test2();
+  test3();
 }
