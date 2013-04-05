@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 import cPickle as pickle
 
-from cinterpol import PieceWisePolyInterpol
+from cinterpol import PiecewisePolynomial
 
 def main(start=0, stop=20, Ncoarse=21, Nfine=1000):
     """
@@ -17,16 +17,18 @@ def main(start=0, stop=20, Ncoarse=21, Nfine=1000):
     y1 =  np.cos(x)
     y2 = -np.sin(x)
     all_y = np.ascontiguousarray(np.vstack((y0, y1, y2)).transpose())
-    pw = PieceWisePolyInterpol.mk_from_array(x, all_y)
+    pw = PiecewisePolynomial(x, all_y)
 
     # Demo serialization
+    f,data = pw.__reduce__()
+    print f(*data)
     pickle.dump(pw, open('pw.pkl', 'wb'))#, protocol = 2)
     del pw
     pw = pickle.load(open('pw.pkl', 'rb'))
 
     # Plot interpolation
     xfine = np.linspace(start, stop, Nfine)
-        plt.subplot(2, 1, 1)
+    plt.subplot(2, 1, 1)
 
     plt.plot(x, y0, '*', label = 'Data')
     plt.plot(xfine, pw(xfine), label='Interpolated')

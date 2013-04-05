@@ -6,7 +6,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-from cinterpol import PieceWisePolyInterpol
+from cinterpol import PiecewisePolynomial as cPiecewisePolynomial
 
 from scipy.interpolate import PiecewisePolynomial
 
@@ -21,20 +21,20 @@ def main(start=0, stop=20, Ncoarse=21, Nfine=1000):
     y1 =  np.cos(x)
     y2 = -np.sin(x)
     all_y = np.ascontiguousarray(np.vstack((y0, y1, y2)).transpose())
-    pw = PieceWisePolyInterpol.mk_from_array(x, all_y)
-    sp_pp = get_scipy_pp(x, all_y)
+    cpp = cPiecewisePolynomial(x, all_y)
+    pp = PiecewisePolynomial(x, all_y)
     xfine = np.linspace(start, stop, Nfine)
-    ipy = pw(xfine)
+    ipy = cpp(xfine)
     plt.subplot(3, 1, 1)
     plt.plot(x, y0, '*', label = 'Data')
-    plt.plot(xfine, pw(xfine), label='cinterpol')
-    plt.plot(xfine, sp_pp(xfine), label='SciPy PiecewisePolynomial')
+    plt.plot(xfine, cpp(xfine), label='cinterpol')
+    plt.plot(xfine, pp(xfine), label='SciPy PiecewisePolynomial')
     plt.legend()
 
     plt.subplot(3, 1, 2)
-    plt.plot(xfine, np.sin(xfine) - pw(xfine), label='cInterpol analytic error')
+    plt.plot(xfine, np.sin(xfine) - cpp(xfine), label='cInterpol analytic error')
     plt.subplot(3, 1, 3)
-    plt.plot(xfine, sp_pp(xfine) - pw(xfine), label='cInterpol diff from scipy')
+    plt.plot(xfine, pp(xfine) - cpp(xfine), label='cInterpol diff from scipy')
     plt.legend()
 
     plt.show()
@@ -48,13 +48,13 @@ def bench(start=0, stop=20, N=4e4):
 
     xfine=np.linspace(start,stop,N*3)
     cinterpol_start = time.time()
-    pw = PieceWisePolyInterpol.mk_from_array(x, all_y)
-    cinterpol_res=pw(xfine)
+    cpp = cPiecewisePolynomial(x, all_y)
+    cinterpol_res=cpp(xfine)
     cinterpol_stop = time.time()
 
     scipy_start = time.time()
-    sp_pp = get_scipy_pp(x, all_y)
-    scipy_res=sp_pp(xfine)
+    pp = PiecewisePolynomial(x, all_y)
+    scipy_res=pp(xfine)
     scipy_stop = time.time()
 
     print 'cinterpol time: ', cinterpol_stop-cinterpol_start
