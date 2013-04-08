@@ -36,9 +36,11 @@ cdef class PiecewisePolynomial:
     cdef int order
 
     def __cinit__(self, double [:] t, double [:,:] y, _c = None):
+        """ Sets t, c and order"""
         if _c != None:
             self.t = ensure_contiguous(t)
             self.c = ensure_contiguous(_c)
+            self.order = (_c.shape[1] / 2) - 1
             return
 
         cdef np.ndarray[np.float64_t, ndim=2] c = np.ascontiguousarray(np.empty(
