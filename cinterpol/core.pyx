@@ -1,5 +1,6 @@
 import numpy as np
 cimport numpy as np
+from cpython cimport bool
 #from libc.math cimport pow as c_pow
 
 # Cython 0.19-dev support const properly since 2013-03-26
@@ -20,10 +21,10 @@ cdef ensure_contiguous(arr):
         return np.ascontiguousarray(arr)
 
 
-cpdef PiecewisePolynomial PiecewisePolynomial_from_coefficients(t, c):
+cpdef PiecewisePolynomial PiecewisePolynomial_from_coefficients(t, c, allow_extrapol=True):
     t = ensure_contiguous(t)
     c = ensure_contiguous(c)
-    return PiecewisePolynomial(t, c, c)
+    return PiecewisePolynomial(t, c, c, allow_extrapol)
 
 
 
@@ -31,16 +32,18 @@ cdef class PiecewisePolynomial:
     """
     PiecewisePolynomial class (mimics scipy.interpolate.PiecewisePolynomial)
     """
-    cdef double [:] t
-    cdef double [:,:] c
-    cdef int order
+    cdef public double [:] t
+    cdef public double [:,:] c
+    cdef public int order
+    cdef public bool allow_extrapol
 
-    def __cinit__(self, double [:] t, double [:,:] y, _c = None):
+    def __cinit__(self, double [:] t, double [:,:] y, _c = None, allow_extrapol=True):
         """ Sets t, c and order"""
         if _c != None:
             self.t = ensure_contiguous(t)
             self.c = ensure_contiguous(_c)
             self.order = (_c.shape[1] / 2) - 1
+            self.allow_extrapol = allow_extrapol
             return
 
         cdef np.ndarray[np.float64_t, ndim=2] c = np.ascontiguousarray(np.empty(
@@ -49,6 +52,7 @@ cdef class PiecewisePolynomial:
         t = ensure_contiguous(t)
         y = ensure_contiguous(y)
 
+        self.allow_extrapol = allow_extrapol
         self.order = y.shape[1] - 1
         if self.order == 0:
             poly_coeff1(&t[0], &y[0,0], &c[0,0], len(t))
@@ -59,6 +63,21 @@ cdef class PiecewisePolynomial:
 
         self.t = t
         self.c = c
+
+    cdef int _get_c_index(self, double t):
+        if t < self.t[0]:
+            if self.allow_extrapol == True:
+                return 0
+            else:
+                raise ValueError('Out of bounds (allow_extrapol set to False)')
+        elif t > self.t[-1]:
+            if self.allow_extrapol == True:
+                return len(self.t)-1
+            else:
+                raise ValueError('Out of bounds (allow_extrapol set to False)')
+        else:
+            return get_interval(&self.t[0], len(self.t), t)
+
 
     def __call__(self, t):
         # These 3 are used in case of t is float
@@ -72,12 +91,9 @@ cdef class PiecewisePolynomial:
         else:
             if isinstance(t, float):
                 y = 0.0
-                if self.t[0] <= t and t <= self.t[-1]:
-                    it = get_interval(&self.t[0], len(self.t), t)
-                else:
-                    raise ValueError('Out of bounds')
+                it = self._get_c_index(t)
                 for j in range((self.order + 1)*2):
-                    y += (t - self.t[it]) ** j * self.c[it, j]
+                    y += (t - self.t[it])**j * self.c[it, j]
                 return np.array(y, dtype = np.float64)
             t = np.array(t, dtype=np.float64)
         yout = np.ascontiguousarray(np.empty(t.shape, dtype=np.float64))
@@ -94,16 +110,15 @@ cdef class PiecewisePolynomial:
         cdef size_t it
         cdef int j
         cdef size_t t_size = len(t)
+        cdef size_t c_size = self.c.shape[0]
         cdef double y
-        if self.t[0] <= t[0] and t[-1] <= self.t[-1]:
-            it  = get_interval(&self.t[0], len(self.t), t[0])
-        else:
-            raise ValueError('Out of bounds')
+        it = self._get_c_index(t[0])
 
         while i < t_size:
             if t[i] > self.t[it + 1]:
-                it += 1
-                continue
+                if it < (c_size-2):
+                    it += 1
+                    continue
             y = 0.0
             for j in range((self.order + 1)*2):
                 y += (t[i] - self.t[it]) ** j * self.c[it, j]
@@ -111,10 +126,11 @@ cdef class PiecewisePolynomial:
             i += 1
 
     def __reduce__(self):
-        return PiecewisePolynomial_from_coefficients, (np.asarray(self.t), np.asarray(self.c))
+        return PiecewisePolynomial_from_coefficients, (
+            np.asarray(self.t), np.asarray(self.c), self.allow_extrapol)
 
-    def get_c(self):
-        return np.asarray(self.c)
+    # def get_c(self):
+    #     return np.asarray(self.c)
 
-    def get_t(self):
-        return np.asarray(self.t)
+    # def get_t(self):
+    #     return np.asarray(self.t)

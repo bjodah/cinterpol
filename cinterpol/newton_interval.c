@@ -42,6 +42,7 @@ int get_interval(const double arr[], const int N, const double t){
   if (eq_tip1)
     return i + 1;
 
+
   while (!(gteq_ti & lt_tip1)){
     if (gteq_ti) {
       h = sqrt_nt;
@@ -54,24 +55,24 @@ int get_interval(const double arr[], const int N, const double t){
     while (((i + h) > upper_bound) || ((i + h) < lower_bound)){
         h /= 2;
         if (h == 0)
-          return -1;
+          h = (upper_bound - lower_bound)-i;
     }
     dtdi = (arr[i+h] - arr[i]) / h;
     di = ceil_away0((t - arr[i]) / dtdi);
     /* Check we're not out of explored boundaries; */
     while (((i + di) > upper_bound) || ((i + di) < lower_bound)){
-      printf("di %d, i %d, upper_bound %d, lower_bound %d\n", di, i, upper_bound, lower_bound);
-      printf("larger %d, smaller %d\n", ((i + di) > upper_bound), ((i + di) < lower_bound));
-      printf("either\n", ((i + di) > upper_bound) || ((i + di) < lower_bound));
-      fflush(stdout);
-      di /= 2; /* What happens if di=0? Could that happen? */
+      /* printf("di %d, i %d, upper_bound %d, lower_bound %d\n", di, i, upper_bound, lower_bound); */
+      /* printf("larger %d, smaller %d\n", ((i + di) > upper_bound), ((i + di) < lower_bound)); */
+      /* printf("either\n", ((i + di) > upper_bound) || ((i + di) < lower_bound)); */
+      /* fflush(stdout); */
+      di /= 2;
       if (di == 0)
-        return -1;
+        di = (upper_bound - lower_bound)-i;
     }
     /* Update lower and upper boundaries; */
-    if (i + di > lower_bound)
+    if ((gteq_ti) && (i > lower_bound))
       lower_bound = i;
-    if (i + di < upper_bound)
+    if ((lt_tip1) && (i < upper_bound))
       upper_bound = i;
     /* Update i; */
     i += di;

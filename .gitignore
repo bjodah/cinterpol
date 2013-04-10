@@ -6,3 +6,4 @@ cinterpol/tests/__pycache__
 cinterpol/tests/test_newton_interval
 cinterpol/tests/*.pyc
 examples/pp.pkl
+examples/*.pyc

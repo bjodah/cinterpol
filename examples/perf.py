@@ -24,7 +24,7 @@ def bench(start=0, stop=20, N=4e4):
     cinterpol_stop = time.time()
 
     scipy_start = time.time()
-    pp = cpp #PiecewisePolynomial(x, all_y)
+    pp = PiecewisePolynomial(x, all_y)
     scipy_res=pp(xfine)
     scipy_stop = time.time()
 
