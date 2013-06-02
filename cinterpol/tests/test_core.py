@@ -5,7 +5,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from cinterpol import PieceWisePolyInterpol
+from cinterpol import PiecewisePolynomial
 
 try:
     import pytest
@@ -45,9 +45,9 @@ def f2(t):
 arg_cases = [(t1,y1,c1,f1), (t2,y2,c2,f2)]
 
 @pytest.mark.parametrize('args',  arg_cases)
-def test_PieceWisePolyInterpol_mk_from_array(args):
+def test_PiecewisePolynomial(args):
     t, y, c, f = args
-    pw = PieceWisePolyInterpol.mk_from_array(t, y)
+    pw = PiecewisePolynomial(t, y)
     assert np.allclose(pw.get_t(), t)
     assert np.allclose(pw.get_c(), c)
     t_series = np.linspace(t[0], t[1], 50)
@@ -56,12 +56,12 @@ def test_PieceWisePolyInterpol_mk_from_array(args):
     assert np.allclose(exact_y, interpol_y)
 
 
-def test_PieceWisePolyInterpol_call():
-    pwpi=PieceWisePolyInterpol.mk_from_array(np.array([0.0,1.0]),np.array([[0.0],[1.0]]))
+def test_PiecewisePolynomial_call():
+    pwpi=PiecewisePolynomial(np.array([0.0,1.0]),np.array([[0.0],[1.0]]))
     assert pwpi(0.5) == 0.5
 
 if __name__ == '__main__':
     for args in arg_cases:
-        test_PieceWisePolyInterpol_mk_from_array(args)
-    test_PieceWisePolyInterpol_call()
+        test_PiecewisePolynomial(args)
+    test_PiecewisePolynomial_call()
 
