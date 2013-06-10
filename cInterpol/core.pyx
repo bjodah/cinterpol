@@ -1,14 +1,12 @@
 import numpy as np
 cimport numpy as np
 from cpython cimport bool
-#from libc.math cimport pow as c_pow
-
-# Cython 0.19-dev support const properly since 2013-03-26
 
 cdef extern size_t get_interval(const double arr[], const size_t N, const double t)
 cdef extern void poly_coeff1(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff3(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff5(const double t[], const double y[], double c[], const size_t nt)
+# Note above: Cython 0.19-dev support const properly since 2013-03-26
 
 
 cdef ensure_contiguous(arr):
@@ -25,7 +23,6 @@ cpdef PiecewisePolynomial PiecewisePolynomial_from_coefficients(t, c, allow_extr
     t = ensure_contiguous(t)
     c = ensure_contiguous(c)
     return PiecewisePolynomial(t, c, c, allow_extrapol)
-
 
 
 cdef class PiecewisePolynomial:
@@ -84,7 +81,9 @@ cdef class PiecewisePolynomial:
         cdef double y
         cdef size_t it
         cdef int j
+
         cdef double [:] yout
+
         if isinstance(t, np.ndarray):
             if not t.flags.c_contiguous:
                 t = np.ascontiguousarray(t)
@@ -96,9 +95,11 @@ cdef class PiecewisePolynomial:
                     y += (t - self.t[it])**j * self.c[it, j]
                 return np.array(y, dtype = np.float64)
             t = np.array(t, dtype=np.float64)
+
         yout = np.ascontiguousarray(np.empty(t.shape, dtype=np.float64))
         self._interpol(t, yout)
         return np.asarray(yout)
+
 
     cdef _interpol(self,
                    double [:] t,
@@ -125,12 +126,7 @@ cdef class PiecewisePolynomial:
             yout[i] = y
             i += 1
 
+
     def __reduce__(self):
         return PiecewisePolynomial_from_coefficients, (
             np.asarray(self.t), np.asarray(self.c), self.allow_extrapol)
-
-    # def get_c(self):
-    #     return np.asarray(self.c)
-
-    # def get_t(self):
-    #     return np.asarray(self.t)

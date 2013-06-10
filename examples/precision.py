@@ -6,7 +6,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
-from cinterpol import PiecewisePolynomial as cPiecewisePolynomial
+from cInterpol import PiecewisePolynomial as cPiecewisePolynomial
 
 from scipy.interpolate import PiecewisePolynomial
 
@@ -24,7 +24,7 @@ def main(start=0, stop=20, Ncoarse=21, Nfine=1000):
     ipy = cpp(xfine)
     plt.subplot(3, 1, 1)
     plt.plot(x, y0, '*', label = 'Data')
-    plt.plot(xfine, cpp(xfine), label='cinterpol')
+    plt.plot(xfine, cpp(xfine), label='cInterpol')
     plt.plot(xfine, pp(xfine), label='SciPy PiecewisePolynomial')
     plt.legend()
 
@@ -38,4 +38,3 @@ def main(start=0, stop=20, Ncoarse=21, Nfine=1000):
 
 if __name__ == '__main__':
     main()
-

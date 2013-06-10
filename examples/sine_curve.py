@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 import cPickle as pickle
 
-from cinterpol import PiecewisePolynomial
+from cInterpol import PiecewisePolynomial
 
 def get_sin_pp(start=0, stop=20, Ncoarse=21):
     x = np.linspace(start, stop, Ncoarse)
@@ -39,4 +39,3 @@ def plot(pp, t0=None, tend=None, Nfine=1000):
 if __name__ == '__main__':
     pp = get_sin_pp()
     plot(pp)
-

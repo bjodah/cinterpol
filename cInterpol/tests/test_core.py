@@ -5,7 +5,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from cinterpol import PiecewisePolynomial
+from cInterpol import PiecewisePolynomial
 
 try:
     import pytest
@@ -48,8 +48,8 @@ arg_cases = [(t1,y1,c1,f1), (t2,y2,c2,f2)]
 def test_PiecewisePolynomial(args):
     t, y, c, f = args
     pw = PiecewisePolynomial(t, y)
-    assert np.allclose(pw.get_t(), t)
-    assert np.allclose(pw.get_c(), c)
+    assert np.allclose(pw.t, t)
+    assert np.allclose(pw.c, c)
     t_series = np.linspace(t[0], t[1], 50)
     interpol_y = pw(t_series)
     exact_y = f(t_series)
@@ -64,4 +64,3 @@ if __name__ == '__main__':
     for args in arg_cases:
         test_PiecewisePolynomial(args)
     test_PiecewisePolynomial_call()
-
