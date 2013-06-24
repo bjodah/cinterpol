@@ -61,6 +61,11 @@ Bits and pieces with potential for usage outside cInterpol
 newton_interval.c - Even though very simple it can be useful for quadratic
 convergence lookup in ordered (strictly monotone) and well behaved arrays.
 
+TODO
+====
+Add cubic splines
+Add finite difference (Fornberg)
+
 License
 =======
 Open Soucrce. Released under the very permissive "simplified (2-clause) BSD license". See LICENCE.txt for further details.

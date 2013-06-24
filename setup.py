@@ -6,12 +6,12 @@ try:
 except ImportError:
     use_cython = False
     import bz2
-    open('cinterpol/core.c','wb').write(bz2.BZ2File('cinterpol/core.c.bz2').read())
+    open('cInterpol/core.c','wb').write(bz2.BZ2File('cInterpol/core.c.bz2').read())
 else:
-    from cinterpol.poly_coeff_expr import coeff_expr, render_mako_template_to
+    from cInterpol.poly_coeff_expr import coeff_expr, render_mako_template_to
     use_cython = True
-    mako_targets = {'cinterpol/poly_coeff{}.c'.format(i): (
-        'cinterpol/poly_coeffX.c.mako', coeff_expr(i)) for i \
+    mako_targets = {'cInterpol/poly_coeff{}.c'.format(i): (
+        'cInterpol/poly_coeffX.c.mako', coeff_expr(i)) for i \
                     in range(1, 6, 2)}
 
     class my_build_ext(build_ext):
@@ -39,19 +39,19 @@ ext_modules = []
 
 if use_cython:
     ext_modules += [
-        Extension("cinterpol.core", mako_targets.keys() + [
-            "cinterpol/core.pyx", 'cinterpol/newton_interval.c']),
+        Extension("cInterpol.core", mako_targets.keys() + [
+            "cInterpol/core.pyx", 'cInterpol/newton_interval.c']),
     ]
     cmdclass.update({ 'build_ext': my_build_ext })
 else:
     ext_modules += [
-        Extension("cinterpol.core", [ "cinterpol/core.c" ]),
+        Extension("cInterpol.core", [ "cInterpol/core.c" ]),
     ]
 
 setup(
-    name='cinterpol',
+    name='cInterpol',
     cmdclass = cmdclass,
     ext_modules=ext_modules,
     include_dirs=[np.get_include()],
-    packages = ['cinterpol']
+    packages = ['cInterpol']
 )
