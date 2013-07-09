@@ -4,7 +4,7 @@
 
 /* MAKO TEMPLATE INIT */
 
-void poly_coeff${ORDER}(const double t[], const double y[], double c[], const size_t nt){
+void poly_coeff${ORDER}(const double *restrict t, const double *restrict y, double *restrict c, const size_t nt){
   /*
     solve shifted first order coeff
   */

@@ -34,15 +34,18 @@ cdef class PiecewisePolynomial:
     cdef public int order
     cdef public bool allow_extrapol
 
-    def __cinit__(self, double [:] t, double [:,:] y, _c = None, allow_extrapol=True):
+    def __cinit__(self, double [:] t, double [:,:] y, _c = None, allow_extrapol=True, check_nan=True):
         """ Sets t, c and order"""
         if _c != None:
+            # init from t and c
             self.t = ensure_contiguous(t)
             self.c = ensure_contiguous(_c)
             self.order = (_c.shape[1] / 2) - 1
             self.allow_extrapol = allow_extrapol
+            if check_nan: self._check_nan()
             return
 
+        # init from t and y
         cdef np.ndarray[np.float64_t, ndim=2] c = np.ascontiguousarray(np.empty(
             (y.shape[0], y.shape[1] * 2), dtype = np.float64))
 
@@ -60,6 +63,17 @@ cdef class PiecewisePolynomial:
 
         self.t = t
         self.c = c
+        if check_nan: self._check_nan()
+
+
+    cdef _check_nan(self):
+        for x in self.t:
+            if x != x:
+                raise ValueError('NaN encountered in t')
+        for x in self.c:
+            if x != x:
+                raise ValueError('NaN encountered in c')
+
 
     cdef int _get_c_index(self, double t):
         if t < self.t[0]:

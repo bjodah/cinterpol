@@ -2,15 +2,21 @@
 cInterpol
 =============
 
-cInterpol_ is a small python extension for optimized interpolation of data series for which
-each time point has up to N-th order derivative.
+cInterpol_ is a small python extension for optimized interpolation of
+data series for which each time point has up to N-th order derivative.
 
-It provides a c:a 3 orders of magnitude faster (albeit less general) version of scipy.interpolate.PiecewisePolynomial
+It provides a c:a 3 orders of magnitude faster (albeit less general)
+version of `scipy.interpolate.PiecewisePolynomial`. The greatest speed
+up requires passing check_nan=False to PiecewisePolynomial.__init__,
+check_nan=True (default) make runtime twice (perf.py) as long (for
+now).
 
-See examples/perf.py for a quick head-on benchmark between those two (expect a runtime on the order of one minute).
-The performance is achieved through the use of plain C (with some equations generated through Sympy) and Cython.
+See examples/perf.py for a quick head-on benchmark between those two
+(expect a runtime on the order of one minute).  The performance is
+achieved through the use of plain C (with some equations generated
+through Sympy) and Cython.
 
-Feel free to enhance modify and make pull request at `github`__ to 
+Feel free to enhance modify and make pull request at `github`__ to
 
 .. _cinterpol: http://www.github.com/bjodah/cinterpol
 
@@ -39,7 +45,8 @@ the tests in symodesys/tests (read MANIFEST.txt therein)
 
 Performance tests
 -----------------
-See examples/perf.py, as of SciPy 0.11 you should expect about 3 orders of magnitude speed-up.
+See examples/perf.py, as of SciPy 0.11 you should expect about 3
+orders of magnitude speed-up.
 
 
 Dependencies
@@ -68,7 +75,8 @@ Add finite difference (Fornberg)
 
 License
 =======
-Open Soucrce. Released under the very permissive "simplified (2-clause) BSD license". See LICENCE.txt for further details.
+Open Soucrce. Released under the very permissive "simplified
+(2-clause) BSD license". See LICENCE.txt for further details.
 
 Author
 ======

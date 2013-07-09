@@ -1,5 +1,7 @@
+from os import environ
 from distutils.core import setup
 from distutils.extension import Extension
+from distutils.sysconfig import get_config_var
 
 try:
     from Cython.Distutils import build_ext
@@ -25,13 +27,16 @@ else:
                 #self.mkpath(target_dir)
                 for outpath, (tmpl_path, subsd) in mako_targets.iteritems():
                     render_mako_template_to(tmpl_path, outpath, subsd)
-
             # distutils uses old-style classes, so no super()
             build_ext.run(self)
 
 
 import numpy as np
 
+
+# allow for the "restrict" keyword
+cv = get_config_var('CFLAGS')
+environ['CFLAGS'] = cv + ' -std=c99'
 
 
 cmdclass = {}
