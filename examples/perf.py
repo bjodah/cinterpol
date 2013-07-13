@@ -25,10 +25,19 @@ def bench(start=0, stop=20, N=4e4):
     cInterpol_res=cpp(xfine)
     cInterpol_stop = time.time()
 
-    cInterpol_no_check_start = time.time()
+    # No check_nan
+    cInterpol_no_check_nan_start = time.time()
     cpp = cPiecewisePolynomial(x, all_y, check_nan=False)
-    cInterpol_no_check_res=cpp(xfine)
-    cInterpol_no_check_stop = time.time()
+    cInterpol_no_check_nan_res=cpp(xfine)
+    cInterpol_no_check_nan_stop = time.time()
+
+    # No check_nan_monotone
+    cInterpol_no_check_nan_monotone_start = time.time()
+    cpp = cPiecewisePolynomial(x, all_y, check_nan=False,
+                               check_strict_monotonicity=False)
+    cInterpol_no_check_nan_monotone_res=cpp(xfine)
+    cInterpol_no_check_nan_monotone_stop = time.time()
+
 
     scipy_start = time.time()
     pp = PiecewisePolynomial(x, all_y)
@@ -41,8 +50,16 @@ def bench(start=0, stop=20, N=4e4):
     cInterpol_time = cInterpol_stop-cInterpol_start
     print('cInterpol time/speedup: ', cInterpol_time, scipy_time/cInterpol_time)
 
-    cInterpol_no_check_time = cInterpol_no_check_stop-cInterpol_no_check_start
-    print('cInterpol time/speedup (without checking for NaN): ', cInterpol_no_check_time, scipy_time/cInterpol_no_check_time)
+    cInterpol_no_check_nan_time = cInterpol_no_check_nan_stop -\
+                                  cInterpol_no_check_nan_start
+    print('cInterpol time/speedup (without check_nan): ',
+          cInterpol_no_check_nan_time, scipy_time/cInterpol_no_check_nan_time)
+
+    cInterpol_no_check_nan_monotone_time = cInterpol_no_check_nan_monotone_stop -\
+                                  cInterpol_no_check_nan_monotone_start
+    print('cInterpol time/speedup (without check_nan/check_strict_monotonicity): ',
+          cInterpol_no_check_nan_monotone_time,
+          scipy_time/cInterpol_no_check_nan_monotone_time)
 
     print('cInterpol err:',cInterpol_res[-5:]-np.sin(xfine[-5:]))
     print('scipy err:', scipy_res[-5:]-np.sin(xfine[-5:]))

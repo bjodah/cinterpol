@@ -2,11 +2,35 @@ import numpy as np
 cimport numpy as np
 from cpython cimport bool
 
+
 cdef extern size_t get_interval(const double arr[], const size_t N, const double t)
 cdef extern void poly_coeff1(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff3(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff5(const double t[], const double y[], double c[], const size_t nt)
 # Note above: Cython 0.19-dev support const properly since 2013-03-26
+
+cdef bint _check_nan(double * arr, int n) nogil:
+    cdef double x
+    cdef int i
+
+    for i in range(n):
+        x = arr[i]
+        if x != x:
+            return False
+    return True
+
+
+cdef bint _check_strict_monotonicity(double * arr, int n) nogil:
+    cdef double x, old_x
+    cdef int i
+
+    old_x = arr[0]
+    for i in range(1,n):
+        x = arr[i]
+        if x <= old_x:
+            return False
+        old_x = x
+    return True
 
 
 cdef ensure_contiguous(arr):
@@ -34,45 +58,44 @@ cdef class PiecewisePolynomial:
     cdef public int order
     cdef public bool allow_extrapol
 
-    def __cinit__(self, double [:] t, double [:,:] y, _c = None, allow_extrapol=True, check_nan=True):
+    def __cinit__(self, double [:] t, double [:,:] y, _c = None,
+                  allow_extrapol=True, check_nan=True,
+                  check_strict_monotonicity=True):
         """ Sets t, c and order"""
+        cdef np.ndarray[np.float64_t, ndim=2] c = np.ascontiguousarray(np.empty(
+            (y.shape[0], y.shape[1] * 2), dtype = np.float64))
         if _c != None:
             # init from t and c
             self.t = ensure_contiguous(t)
             self.c = ensure_contiguous(_c)
             self.order = (_c.shape[1] / 2) - 1
             self.allow_extrapol = allow_extrapol
-            if check_nan: self._check_nan()
-            return
+        else:
+            # init from t and y
 
-        # init from t and y
-        cdef np.ndarray[np.float64_t, ndim=2] c = np.ascontiguousarray(np.empty(
-            (y.shape[0], y.shape[1] * 2), dtype = np.float64))
+            t = ensure_contiguous(t)
+            y = ensure_contiguous(y)
 
-        t = ensure_contiguous(t)
-        y = ensure_contiguous(y)
+            self.allow_extrapol = allow_extrapol
+            self.order = y.shape[1] - 1
+            if self.order == 0:
+                poly_coeff1(&t[0], &y[0,0], &c[0,0], len(t))
+            elif self.order == 1:
+                poly_coeff3(&t[0], &y[0,0], &c[0,0], len(t))
+            elif self.order == 2:
+                poly_coeff5(&t[0], &y[0,0], &c[0,0], len(t))
 
-        self.allow_extrapol = allow_extrapol
-        self.order = y.shape[1] - 1
-        if self.order == 0:
-            poly_coeff1(&t[0], &y[0,0], &c[0,0], len(t))
-        elif self.order == 1:
-            poly_coeff3(&t[0], &y[0,0], &c[0,0], len(t))
-        elif self.order == 2:
-            poly_coeff5(&t[0], &y[0,0], &c[0,0], len(t))
+            self.t = t
+            self.c = c
 
-        self.t = t
-        self.c = c
-        if check_nan: self._check_nan()
-
-
-    cdef _check_nan(self):
-        for x in self.t:
-            if x != x:
-                raise ValueError('NaN encountered in t')
-        for x in self.c:
-            if x != x:
-                raise ValueError('NaN encountered in c')
+        if check_nan:
+            if not _check_nan(&self.t[0], len(self.t)):
+                raise ValueError('NaN encountered!')
+            if not _check_nan(&self.c[0,0], self.c.shape[0]*self.c.shape[1]):
+                raise ValueError('NaN encountered!')
+        if check_strict_monotonicity:
+            if not _check_strict_monotonicity(&self.t[0], len(self.t)):
+                raise ValueError('Not monotone!')
 
 
     cdef int _get_c_index(self, double t):
