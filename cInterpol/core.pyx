@@ -1,5 +1,5 @@
 import numpy as np
-cimport numpy as np
+cimport numpy as cnp
 from cpython cimport bool
 
 
@@ -7,7 +7,7 @@ cdef extern size_t get_interval(const double arr[], const size_t N, const double
 cdef extern void poly_coeff1(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff3(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff5(const double t[], const double y[], double c[], const size_t nt)
-# Note above: Cython 0.19-dev support const properly since 2013-03-26
+# Note above: Cython >=0.19 support const properly.
 
 cdef bint _check_nan(double * arr, int n) nogil:
     cdef double x
@@ -58,31 +58,32 @@ cdef class PiecewisePolynomial:
     cdef public int order
     cdef public bool allow_extrapol
 
+
     def __cinit__(self, double [:] t, double [:,:] y, _c = None,
                   allow_extrapol=True, check_nan=True,
                   check_strict_monotonicity=True):
         """ Sets t, c and order"""
-        cdef np.ndarray[np.float64_t, ndim=2] c = np.ascontiguousarray(np.empty(
-            (y.shape[0], y.shape[1] * 2), dtype = np.float64))
+        cdef cnp.ndarray[cnp.float64_t, ndim=2] c = \
+            np.ascontiguousarray(np.empty((y.shape[0], y.shape[1] * 2),
+                                          dtype = np.float64))
         if _c != None:
             # init from t and c
             self.t = ensure_contiguous(t)
             self.c = ensure_contiguous(_c)
-            self.order = (_c.shape[1] / 2) - 1
+            self.order = _c.shape[1] - 1
             self.allow_extrapol = allow_extrapol
         else:
             # init from t and y
-
             t = ensure_contiguous(t)
             y = ensure_contiguous(y)
 
             self.allow_extrapol = allow_extrapol
-            self.order = y.shape[1] - 1
-            if self.order == 0:
+            self.order = y.shape[1] * 2 - 1
+            if self.order == 1:
                 poly_coeff1(&t[0], &y[0,0], &c[0,0], len(t))
-            elif self.order == 1:
+            elif self.order == 3:
                 poly_coeff3(&t[0], &y[0,0], &c[0,0], len(t))
-            elif self.order == 2:
+            elif self.order == 5:
                 poly_coeff5(&t[0], &y[0,0], &c[0,0], len(t))
 
             self.t = t
@@ -91,7 +92,8 @@ cdef class PiecewisePolynomial:
         if check_nan:
             if not _check_nan(&self.t[0], len(self.t)):
                 raise ValueError('NaN encountered!')
-            if not _check_nan(&self.c[0,0], self.c.shape[0]*self.c.shape[1]):
+            if not _check_nan(
+                    &self.c[0,0], self.c.shape[0]*self.c.shape[1]):
                 raise ValueError('NaN encountered!')
         if check_strict_monotonicity:
             if not _check_strict_monotonicity(&self.t[0], len(self.t)):
@@ -103,12 +105,14 @@ cdef class PiecewisePolynomial:
             if self.allow_extrapol == True:
                 return 0
             else:
-                raise ValueError('Out of bounds (allow_extrapol set to False)')
+                raise ValueError(
+                    'Out of bounds (allow_extrapol set to False)')
         elif t > self.t[-1]:
             if self.allow_extrapol == True:
                 return len(self.t)-1
             else:
-                raise ValueError('Out of bounds (allow_extrapol set to False)')
+                raise ValueError(
+                    'Out of bounds (allow_extrapol set to False)')
         else:
             return get_interval(&self.t[0], len(self.t), t)
 
@@ -128,7 +132,7 @@ cdef class PiecewisePolynomial:
             if isinstance(t, float):
                 y = 0.0
                 it = self._get_c_index(t)
-                for j in range((self.order + 1)*2):
+                for j in range(self.order+1):
                     y += (t - self.t[it])**j * self.c[it, j]
                 return np.array(y, dtype = np.float64)
             t = np.array(t, dtype=np.float64)
@@ -136,6 +140,23 @@ cdef class PiecewisePolynomial:
         yout = np.ascontiguousarray(np.empty(t.shape, dtype=np.float64))
         self._interpol(t, yout)
         return np.asarray(yout)
+
+
+    def derivative(self, int nth=1):
+        if nth == 0:
+            return self
+        if nth == 1:
+            assert self.order >= 1
+            new_c = self.c[:,1:]*np.arange(1, self.order+1).reshape(
+                (1, self.order))
+            return PiecewisePolynomial_from_coefficients(
+                self.t, new_c, allow_extrapol=self.allow_extrapol)
+        elif nth > 1:
+            # recursive solution
+            assert nth <= self.order
+            return self.derivative(1).derivative(nth-1)
+        else:
+            raise ValueError("That would be the integral?")
 
 
     cdef _interpol(self,
@@ -158,7 +179,7 @@ cdef class PiecewisePolynomial:
                     it += 1
                     continue
             y = 0.0
-            for j in range((self.order + 1)*2):
+            for j in range(self.order+1):
                 y += (t[i] - self.t[it]) ** j * self.c[it, j]
             yout[i] = y
             i += 1
@@ -167,3 +188,44 @@ cdef class PiecewisePolynomial:
     def __reduce__(self):
         return PiecewisePolynomial_from_coefficients, (
             np.asarray(self.t), np.asarray(self.c), self.allow_extrapol)
+
+
+# Below is for wrapping finitediff.c
+
+cdef extern int apply_finite_difference_over_array(int nx,
+    const double * xarr, const double * yarr, int nreq,
+    const double * xreq, int order, int ntail, int nhead, double * yout)
+
+
+def interpolate_by_finite_diff(double [:] xdata, double [:] ydata,
+                               double [:] xout, int order=0,
+                               int ntail=2, int nhead=2):
+    """
+    Interpolates function value (or its derivative - `order`)
+    at xout based on finite difference using provided xdata and
+    ydata. Algortithm assumes non-regularly spaced xdata. If
+    xdata is regularly spaced this algortihm is not the optimal
+    to use with respect to performance.
+
+    The underlying algorithm (here implemented in C) is from:
+    Generation of Finite Difference Formulas on Arbitrarily
+        Spaced Grids, Bengt Fornberg
+    Mathematics of compuation, 51, 184, 1988, 699-706
+    """
+
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] xdata_arr = \
+        np.ascontiguousarray(xdata)
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] ydata_arr = \
+        np.ascontiguousarray(ydata)
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] xout_arr = \
+        np.ascontiguousarray(xout)
+    cdef int nin = xdata.data.shape[0]
+    cdef int nout = xout.data.shape[0]
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] yout = \
+        np.zeros(nout, order='C')
+
+    apply_finite_difference_over_array(
+        nin, <double *>xdata_arr.data, <double *>ydata_arr.data,
+        nout, <double *>xout_arr.data, order, ntail, nhead, <double *>yout.data)
+
+    return yout

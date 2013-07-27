@@ -44,8 +44,9 @@ ext_modules = []
 
 if use_cython:
     ext_modules += [
-        Extension("cInterpol.core", mako_targets.keys() + [
-            "cInterpol/core.pyx", 'cInterpol/newton_interval.c']),
+        Extension('cInterpol.core', mako_targets.keys() + [
+            'cInterpol/core.pyx', 'cInterpol/newton_interval.c',
+            'cInterpol/finitediff.c']),
     ]
     cmdclass.update({ 'build_ext': my_build_ext })
 else:
