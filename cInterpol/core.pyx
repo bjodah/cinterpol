@@ -219,8 +219,8 @@ def interpolate_by_finite_diff(double [:] xdata, double [:] ydata,
         np.ascontiguousarray(ydata)
     cdef cnp.ndarray[cnp.float64_t, ndim=1] xout_arr = \
         np.ascontiguousarray(xout)
-    cdef int nin = xdata.data.shape[0]
-    cdef int nout = xout.data.shape[0]
+    cdef int nin = xdata.shape[0]
+    cdef int nout = xout.shape[0]
     cdef cnp.ndarray[cnp.float64_t, ndim=1] yout = \
         np.zeros(nout, order='C')
 
