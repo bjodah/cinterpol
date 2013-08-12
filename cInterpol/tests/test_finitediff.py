@@ -16,7 +16,7 @@ def test_interpolate_by_finite_diff():
                                    nhead=5)
     yexact = np.exp(xtest)
     for ci in range(y.shape[1]):
-        tol = 10**-(14-ci*2)
+        tol = 10**-(13-ci*2)
         assert np.allclose(yexact, y[:,ci],
                            rtol=tol, atol=tol)
 

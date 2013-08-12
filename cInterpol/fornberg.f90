@@ -108,7 +108,7 @@ contains
     real(dp) :: z
     integer :: j, k, m, nd
     real(dp), allocatable :: c(:,:)
-    real(dp), parameter :: x(0:*) = [-1.0_dp, 0.0_dp, 1.0_dp]
+    real(dp), parameter :: x(0:2) = [-1.0_dp, 0.0_dp, 1.0_dp]
     nd = size(x)-1
     m = 2
     z = 0.0_dp
