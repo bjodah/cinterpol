@@ -23,15 +23,15 @@ module fornberg
 
 contains
 
-  subroutine apply_fd(xdata, ydata, xtgt, nin, maxorder, out) bind(c)
-    integer(c_int), intent(in) :: nin, nout, maxorder
+  subroutine apply_fd(nin, maxorder, xdata, ydata, xtgt, out) bind(c)
+    integer(c_int), intent(in) :: nin, maxorder
     real(c_double), intent(in) :: xdata(0:nin-1), ydata(0:nin-1), xtgt
     real(c_double), intent(inout) :: out(0:maxorder)
-    integer :: i
+    integer :: j,k
     real(dp), allocatable :: c(:,:)
     allocate(c(0:nin-1, 0:maxorder))
-    do k=0,m
-      do j=0,nd
+    do k=0,maxorder
+      do j=0,nin-1
         c(j,k) = 0.0_dp
       end do
     end do
@@ -41,23 +41,6 @@ contains
     end do
   end subroutine
 
-  subroutine test_weights()
-    real(dp) :: z
-    integer :: j, k, m, nd
-    real(dp), allocatable :: c(:,:)
-    real(dp), parameter :: x(0:*) = [-1.0_dp, 0.0_dp, 1.0_dp]
-    nd = size(x)-1
-    m = 2
-    z = 0.0_dp
-    allocate(c(0:nd, 0:m))
-    do k=0,m
-      do j=0,nd
-        c(j,k) = 0.0_dp
-      end do
-    end do
-    call populate_weights(z, x, nd, m, c)
-    print *, c
-  end subroutine
 
   subroutine populate_weights (z, x, nd, m, c)
     ! 
@@ -75,8 +58,8 @@ contains
     !                    derivatives of order 0:m, found in c(0:n,0:m)
     !
     real(dp), intent(in) :: z
-    real(dp), intent(in) :: x(0:nd)
     integer, intent(in) :: nd, m
+    real(dp), intent(in) :: x(0:nd)
     real(dp), intent(inout) :: c(0:nd, 0:m)
     
     real(dp) :: c1, c2, c3, c4, c5
@@ -110,7 +93,38 @@ contains
   end subroutine
 end module
 
+module test_fornberg
+
+  use types, only: dp
+  use fornberg, only: populate_weights
+
+  implicit none
+  private
+  public test_weights
+
+contains
+
+  subroutine test_weights()
+    real(dp) :: z
+    integer :: j, k, m, nd
+    real(dp), allocatable :: c(:,:)
+    real(dp), parameter :: x(0:*) = [-1.0_dp, 0.0_dp, 1.0_dp]
+    nd = size(x)-1
+    m = 2
+    z = 0.0_dp
+    allocate(c(0:nd, 0:m))
+    do k=0,m
+      do j=0,nd
+        c(j,k) = 0.0_dp
+      end do
+    end do
+    call populate_weights(z, x, nd, m, c)
+    print *, c
+  end subroutine
+
+end module test_fornberg
+
 program main
-use fornberg, only: test_weights
+use test_fornberg, only: test_weights
 call test_weights()
 end program

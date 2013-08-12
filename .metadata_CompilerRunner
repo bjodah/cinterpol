@@ -1,0 +1,13 @@
+(dp0
+S'vendor'
+p1
+S'gnu'
+p2
+sS'compiler'
+p3
+(S'gfortran'
+p4
+S'/usr/bin/gfortran'
+p5
+tp6
+s.

@@ -191,8 +191,10 @@ cdef class PiecewisePolynomial:
 
 # Below is for wrapping finitediff.c
 
-cdef extern void apply_fd(double * xdata, double * ydata, double * xtgt, int * nin, int * maxorder, double * out)
+cdef extern void apply_fd(int * nin, int * maxorder, double * xdata, double * ydata, double * xtgt, double * out)
 
+cdef extern void populate_weights(double * z, double * x, int * nd,
+                                  int * m, double * c)
 
 cdef bint is_equidistant(double [:] x, double abstol=1e-9,
                          double reltol=1e-9):
@@ -229,73 +231,36 @@ def interpolate_by_finite_diff(double [:] xdata, double [:] ydata,
         np.ascontiguousarray(ydata)
     cdef cnp.ndarray[cnp.float64_t, ndim=1] xout_arr = \
         np.ascontiguousarray(xout)
-    cdef int nin = xdata.shape[0]
+    cdef int nin = ntail+nhead
     cdef int nout = xout.shape[0]
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.empty(maxorder+1)
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] yout = \
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.zeros(maxorder+1)
+    cdef cnp.ndarray[cnp.float64_t, ndim=2] yout = \
         np.zeros((nout, maxorder+1), order='C')
     cdef int i,j # i,j are counters
-    cdef int k # k holds index in ydata
-    cdef int d = nhead+ntail
     cdef double xtgt
 
-    if is_equidistant(xdata):
-        c = get_weights(xdata[0:d])
-        for i in range(nout):
-            k = get_interval(<double *>xdata_arr.data, nin, xout[i])
-            if ntail > k:
-                # We are at beginning
-                pass
-            elif k > nin-nhead:
-                # We are at end
-                pass
-            else:
-                for j in range(maxorder+1):
-                    yout[i,j] = np.sum(c[:,j]*ydata_arr[k:k+d])
-    else:
-        for i in range(nout):
-            xtgt=xout[i]
-            apply_fd(<double *>xdata_arr.data,
-                     <double *>ydata_arr.data,
-                     <double *>xtgt,
-                     <int *>nin,
-                     <int *>maxorder,
-                     <double *>out)
-            yout[i,:] = out
+    assert xdata_arr.shape[0] >= ntail+nhead
+    assert xdata_arr.shape[0] == ydata_arr.shape[0]
+    assert nhead+ntail >= maxorder+1
+
+    for i in range(nout):
+        xtgt=xout[i]
+        j = max(0, get_interval(
+            &xdata_arr[0],xdata_arr.shape[0], xtgt))
+        j = min(j, xdata_arr.shape[0]-nin)
+        apply_fd(&nin,
+                 &maxorder,
+                 &xdata_arr[j],
+                 &ydata_arr[j],
+                 &xtgt,
+                 <double *>out.data)
+        yout[i,:] = out
+    return yout
 
 
-cdef get_weights(double [:] xarr, double xtgt):
-    cdef cnp.ndarray[cnp.float64_t, ndim=2] c = \
+cdef get_weights(double [:] xarr, double xtgt, int n, int maxorder=0):
+    cdef cnp.ndarray[cnp.float64_t, ndim=2, mode='fortran'] c = \
         np.zeros((n, maxorder+1), order='F')
     cdef int nm1 = n-1 # n minus 1
     populate_weights(&xtgt, &xarr[0], &nm1, &maxorder, &c[0,0])
     return c
-
-
-# Below is for wrapping finitediff.c
-
-cdef extern int apply_finite_difference_over_array(int nx,
-    const double * xarr, const double * yarr, int nreq,
-    const double * xreq, int order, int ntail, int nhead, double * yout)
-
-
-
-def nothing(double [:] xdata, double [:] ydata,
-                               double [:] xout, int order=0,
-                               int ntail=2, int nhead=2):
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] xdata_arr = \
-        np.ascontiguousarray(xdata)
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] ydata_arr = \
-        np.ascontiguousarray(ydata)
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] xout_arr = \
-        np.ascontiguousarray(xout)
-    cdef int nin = xdata.shape[0]
-    cdef int nout = xout.shape[0]
-    cdef cnp.ndarray[cnp.float64_t, ndim=1] yout = \
-        np.zeros(nout, order='C')
-
-    apply_finite_difference_over_array(
-        nin, <double *>xdata_arr.data, <double *>ydata_arr.data,
-        nout, <double *>xout_arr.data, order, ntail, nhead, <double *>yout.data)
-
-    return yout
