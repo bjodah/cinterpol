@@ -21,7 +21,6 @@ from pycompilation import pyx2obj, compile_sources, compile_py_so, FortranCompil
 from pycompilation.util import render_mako_template_to, get_abspath
 
 
-
 cInterpol_dir = './cInterpol/'
 
 
@@ -42,29 +41,35 @@ def run_compilation(tempd, logger=None):
 
     poly_coeff_sources = render_poly_coeff(tempd)
 
+    for fname in ['core.so']:
+        fullpath = os.path.join(cInterpol_dir, fname)
+        if os.path.exists(fullpath):
+            os.unlink(fullpath)
+
     for fname in ['core.pyx', 'fornberg.f90', 'newton_interval.c',
-                  'newton_interval.h']:
+                  'newton_interval.h', 'evalpoly.c', 'evalpoly.h']:
         shutil.copy(os.path.join(cInterpol_dir, fname), tempd)
 
     poly_coeff_objs = compile_sources(
-        poly_coeff_sources+['newton_interval.c'],
-        options=['fast', 'pic', 'warn', 'c99'],
+        poly_coeff_sources+['newton_interval.c']+['evalpoly.c'],
+        options=['fast', 'pic', 'warn', 'c99', 'openmp'],
         cwd=tempd, logger=logger, run_linker=False)
 
     fornberg_objs = compile_sources(
         ['fornberg.f90'], FortranCompilerRunner,
         cwd=tempd, options=['fast', 'pic', 'warn', 'f90'],
         run_linker=False, logger=logger)
+
     core_obj = pyx2obj('core.pyx', cwd=tempd, logger=logger,
-                       include_numpy=True)
+                       include_numpy=True, gdb=True, flags=['-g'])
 
     so_path = compile_py_so(poly_coeff_objs+fornberg_objs+[core_obj],
                             FortranCompilerRunner,
-                            cwd=tempd, logger=logger)
+                            cwd=tempd, logger=logger, options=['openmp'])
     return get_abspath(so_path, cwd=tempd)
 
-class my_build_ext(build_ext.build_ext):
 
+class my_build_ext(build_ext.build_ext):
     def run(self):
         # honor the --dry-run flag
         logging.basicConfig(level=logging.INFO)

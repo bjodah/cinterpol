@@ -12,6 +12,7 @@ void poly_coeff${ORDER}(const double *restrict t,
 % for expr in cse_def:
   ${expr}
 % endfor
+#pragma omp parallel for private(dt,${','.join([str(var_name) for var_name, va_expr in cse_defs])}) // i is implicitly priavte
   for (i=0; i < (nt-1); ++i)
     {
       dt = t[i+1]-t[i];
@@ -23,6 +24,7 @@ void poly_coeff${ORDER}(const double *restrict t,
       ${expr}
     % endfor
     }
+  i = nt-1;
   dt = t[i]-t[i-1];
 % for expr in end_block:
   ${expr}

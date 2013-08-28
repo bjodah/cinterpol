@@ -3,6 +3,16 @@ cimport numpy as cnp
 from cpython cimport bool
 
 
+cdef extern int evalpoly(int nt,
+                          int order,
+                          double * t,
+                          double * c,
+                          int nout,
+                          double * tout,
+                          double * yout,
+                          int derivative
+                      )
+
 cdef extern size_t get_interval(const double arr[], const size_t N, const double t)
 cdef extern void poly_coeff1(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff3(const double t[], const double y[], double c[], const size_t nt)
@@ -33,19 +43,56 @@ cdef bint _check_strict_monotonicity(double * arr, int n) nogil:
     return True
 
 
-cdef ensure_contiguous(arr):
-    if isinstance(arr, np.ndarray):
-        if arr.flags.c_contiguous:
-            return arr
+cdef int _get_index(double [:] tarr, double tgt, bint allow_extrapol):
+        if tgt < tarr[0]:
+            if allow_extrapol == True:
+                return 0
+            else:
+                raise ValueError(
+                    'Out of bounds (allow_extrapol set to False)')
+        elif tgt > tarr[-1]:
+            if allow_extrapol == True:
+                return tarr.size-1
+            else:
+                raise ValueError(
+                    'Out of bounds (allow_extrapol set to False)')
         else:
-            return np.ascontiguousarray(arr)
-    else:
-        return np.ascontiguousarray(arr)
+            return get_interval(&tarr[0], tarr.size, tgt)
+
+
+# @cython.boundscheck(False)
+# cdef _interpol(double [:] t,
+#                double [:,:] c,
+#                double [:] tout,
+#                double [:] yout,
+#                bint allow_extrapol) nogil:
+#     """
+#     Modify `yout` inplace to store interpolated values at `t`
+#     """
+#     cdef size_t i = 0
+#     cdef size_t nout = tout.shape[0]
+#     cdef size_t it
+#     cdef int j
+#     cdef size_t c_rows = c.shape[0]
+#     cdef int order = c.shape[1]
+#     cdef double y
+#     it = _get_index(t, tout[0], allow_extrapol)
+
+#     while i < nout:
+#         if tout[i] > t[it + 1]:
+#             if it < (c_rows-2):
+#                 it += 1
+#                 continue
+#         y = 0.0
+#         for j in range(order+1):
+#             y += (tout[i] - t[it]) ** j * c[it, j]
+#         yout[i] = y
+#         i += 1
 
 
 cpdef PiecewisePolynomial PiecewisePolynomial_from_coefficients(t, c, allow_extrapol=True):
-    t = ensure_contiguous(t)
-    c = ensure_contiguous(c)
+    t = np.ascontiguousarray(t)
+    c = (c)
     return PiecewisePolynomial(t, c, c, allow_extrapol)
 
 
@@ -68,14 +115,14 @@ cdef class PiecewisePolynomial:
                                           dtype = np.float64))
         if _c != None:
             # init from t and c
-            self.t = ensure_contiguous(t)
-            self.c = ensure_contiguous(_c)
+            self.t = np.ascontiguousarray(t)
+            self.c = np.ascontiguousarray(_c)
             self.order = _c.shape[1] - 1
             self.allow_extrapol = allow_extrapol
         else:
             # init from t and y
-            t = ensure_contiguous(t)
-            y = ensure_contiguous(y)
+            t = np.ascontiguousarray(t)
+            y = np.ascontiguousarray(y)
 
             self.allow_extrapol = allow_extrapol
             self.order = y.shape[1] * 2 - 1
@@ -100,46 +147,33 @@ cdef class PiecewisePolynomial:
                 raise ValueError('Not monotone!')
 
 
-    cdef int _get_c_index(self, double t):
-        if t < self.t[0]:
-            if self.allow_extrapol == True:
-                return 0
-            else:
-                raise ValueError(
-                    'Out of bounds (allow_extrapol set to False)')
-        elif t > self.t[-1]:
-            if self.allow_extrapol == True:
-                return len(self.t)-1
-            else:
-                raise ValueError(
-                    'Out of bounds (allow_extrapol set to False)')
-        else:
-            return get_interval(&self.t[0], len(self.t), t)
 
 
-    def __call__(self, t):
+    def __call__(self, t, int deriv = 0):
         # These 3 are used in case of t is float
         cdef double y
         cdef size_t it
-        cdef int j
-
-        cdef double [:] yout
+        cdef int j, status
+        cdef cnp.ndarray[cnp.float64_t, ndim=1] yout
+        cdef cnp.ndarray[cnp.float64_t, ndim=1] tout
 
         if isinstance(t, np.ndarray):
-            if not t.flags.c_contiguous:
-                t = np.ascontiguousarray(t)
+            tout = np.ascontiguousarray(t)
         else:
             if isinstance(t, float):
                 y = 0.0
-                it = self._get_c_index(t)
+                it = _get_index(self.t, t, True)
                 for j in range(self.order+1):
                     y += (t - self.t[it])**j * self.c[it, j]
                 return np.array(y, dtype = np.float64)
-            t = np.array(t, dtype=np.float64)
+            tout = np.array(t, dtype=np.float64)
 
-        yout = np.ascontiguousarray(np.empty(t.shape, dtype=np.float64))
-        self._interpol(t, yout)
-        return np.asarray(yout)
+        yout = np.empty_like(tout)
+        status = evalpoly(
+            self.t.size, self.c.shape[1]-1, &self.t[0],
+            &self.c[0,0], tout.size, &tout[0], &yout[0], deriv)
+        assert status == 0
+        return yout
 
 
     def derivative(self, int nth=1):
@@ -159,37 +193,11 @@ cdef class PiecewisePolynomial:
             raise ValueError("That would be the integral?")
 
 
-    cdef _interpol(self,
-                   double [:] t,
-                   double [:] yout):
-        """
-        Modify `yout` inplace to store interpolated values at `t`
-        """
-        cdef size_t i = 0
-        cdef size_t it
-        cdef int j
-        cdef size_t t_size = len(t)
-        cdef size_t c_size = self.c.shape[0]
-        cdef double y
-        it = self._get_c_index(t[0])
-
-        while i < t_size:
-            if t[i] > self.t[it + 1]:
-                if it < (c_size-2):
-                    it += 1
-                    continue
-            y = 0.0
-            for j in range(self.order+1):
-                y += (t[i] - self.t[it]) ** j * self.c[it, j]
-            yout[i] = y
-            i += 1
-
-
     def __reduce__(self):
         return PiecewisePolynomial_from_coefficients, (
             np.asarray(self.t), np.asarray(self.c), self.allow_extrapol)
 
-# Below is for wrapping finitediff.c
+# Below is for wrapping fornberg.f90
 
 cdef extern void apply_fd(int * nin, int * maxorder, double * xdata, double * ydata, double * xtgt, double * out)
 
@@ -258,9 +266,9 @@ def interpolate_by_finite_diff(double [:] xdata, double [:] ydata,
     return yout
 
 
-cdef get_weights(double [:] xarr, double xtgt, int n, int maxorder=0):
-    cdef cnp.ndarray[cnp.float64_t, ndim=2, mode='fortran'] c = \
-        np.zeros((n, maxorder+1), order='F')
-    cdef int nm1 = n-1 # n minus 1
-    populate_weights(&xtgt, &xarr[0], &nm1, &maxorder, &c[0,0])
-    return c
+# cdef get_weights(double [:] xarr, double xtgt, int n, int maxorder=0):
+#     cdef cnp.ndarray[cnp.float64_t, ndim=2, mode='fortran'] c = \
+#         np.zeros((n, maxorder+1), order='F')
+#     cdef int nm1 = n-1 # n minus 1
+#     populate_weights(&xtgt, &xarr[0], &nm1, &maxorder, &c[0,0])
+#     return c

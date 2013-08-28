@@ -66,6 +66,7 @@ def coeff_expr(order):
 
     return {'cse_def': csedef, 'cse_block': cseblock,
             'main_block': block, 'end_block': _get_end_block(order),
+            'cse_defs': cse_defs,
             'ORDER': order}
 
 def _get_end_block(order):

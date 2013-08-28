@@ -2,12 +2,11 @@
 /* #include <stdio.h> */
 #include <stdio.h>
 
-int inline ceil_away0(double d);
+inline static int ceil_away0(double d);
 
-int inline ceil_away0(double d){
+inline static int ceil_away0(double d){
   return (d>0.0) ? ceil(d) : floor(d);
 }
-
 
 int get_interval(const double arr[], const int N, const double t){
   /*
@@ -29,6 +28,8 @@ int get_interval(const double arr[], const int N, const double t){
 
   if (N <= 2)
     return 0;
+  if (t < arr[0])
+    return -1;
 
   /* i might max be N */
   if (i > N - 2){

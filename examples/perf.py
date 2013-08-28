@@ -12,7 +12,7 @@ from cInterpol import PiecewisePolynomial as cPiecewisePolynomial
 
 from scipy.interpolate import PiecewisePolynomial
 
-def bench(start=0, stop=20, N=4e4):
+def bench(start=0, stop=20, N=1e6):
     x = np.linspace(start, stop, N)
     y0 =  np.sin(x)
     y1 =  np.cos(x)
@@ -40,12 +40,12 @@ def bench(start=0, stop=20, N=4e4):
 
 
     scipy_start = time.time()
-    pp = PiecewisePolynomial(x, all_y)
+    pp = PiecewisePolynomial(x[:N/10000], all_y[:,:N/10000])
     scipy_res=pp(xfine)
     scipy_stop = time.time()
 
-    scipy_time = scipy_stop - scipy_start
-    print('scipy time:', scipy_time)
+    scipy_time = (scipy_stop - scipy_start)*10000
+    print('scipy extrapolated time:', scipy_time)
 
     cInterpol_time = cInterpol_stop-cInterpol_start
     print('cInterpol time/speedup: ', cInterpol_time, scipy_time/cInterpol_time)
@@ -65,5 +65,5 @@ def bench(start=0, stop=20, N=4e4):
     print('scipy err:', scipy_res[-5:]-np.sin(xfine[-5:]))
 
 if __name__ == '__main__':
-    print('This can take a minute or two...')
+    print('This can take up to a minute...')
     bench()

@@ -41,19 +41,22 @@ def test_PiecewisePolynomial(args):
         poly = Polynomial(c=row)
         if ri==pw.c.shape[0]-1:
             # Last
-            assert np.allclose(y[ri, :], np.array(
-                poly.eval(0, range(nc))))
-            assert np.allclose(y[ri-1, :], np.array(poly.eval(
-                t[ri-1]-t[ri], range(nc))))
+            ref = np.array(poly.eval(0, range(nc)))
+            assert np.allclose(y[ri, :], ref)
+
+            ref = np.array(poly.eval(t[ri-1]-t[ri], range(nc)))
+            assert np.allclose(y[ri-1, :], ref)
         else:
             # Not last
-            assert np.allclose(y[ri, :], np.array(poly.eval(
-                0, range(nc))))
-            assert np.allclose(y[ri+1, :], np.array(poly.eval(
-                t[ri+1]-t[ri], range(nc))))
+            ref = np.array(poly.eval(0, range(nc)))
+            assert np.allclose(y[ri, :], ref)
+
+            ref = np.array(poly.eval(t[ri+1]-t[ri], range(nc)))
+            assert np.allclose(y[ri+1, :], ref)
 
 
 def test_PiecewisePolynomial_call():
+    # y = x
     pwpi=PiecewisePolynomial(np.array([0.0,1.0]),
                              np.array([[0.0],[1.0]]))
     assert pwpi(-1.5) == -1.5
@@ -70,6 +73,6 @@ def test_PiecewisePolynomial_call():
 
 
 if __name__ == '__main__':
+    test_PiecewisePolynomial_call()
     for args in arg_cases:
         test_PiecewisePolynomial(args)
-    test_PiecewisePolynomial_call()
