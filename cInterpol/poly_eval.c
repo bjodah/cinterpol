@@ -1,9 +1,9 @@
 #include <math.h>
 #include <stdio.h>
 #include "newton_interval.h"
-#include "evalpoly.h"
+#include "poly_eval.h"
 
-// evalpoly.h defines a SIZE_T (now: int - 32bit signed integer is ~2e9)
+// poly_eval.h defines a SIZE_T (now: int - 32bit signed integer => max ~= 2e9)
 
 double power(double num, int exp) {
   // Only valid for positive exp
@@ -43,7 +43,7 @@ int partfact(int order, int deriv){
   }
 }
 
-int evalpoly(const SIZE_T nt,
+int poly_eval(const SIZE_T nt,
 	      const int order,
 	      const double * const restrict t,
 	      const double * const restrict c,
@@ -69,14 +69,9 @@ int evalpoly(const SIZE_T nt,
 	ti = 0;
     }
     else{
-      while (tout[oi] > t[ti+1]){
-	if (ti < (nt-2)){
-	  ti++;
-	}
-	else{
-	  break;
-	}
-      }
+      ti = get_interval_from_guess(t, nt, tout[oi], ti);
+      if (ti == -1)
+	ti = 0;
     }
 
     // Calculate value of yout[oi] at tout[oi]

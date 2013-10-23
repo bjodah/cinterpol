@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "../evalpoly.h"
+#include "../poly_eval.h"
 #include "unittest.h"
 
-int test_evalpoly_1(){
+int test_poly_eval_1(){
   // y=x**3
   int ok = 1;
   int nt=2;
@@ -17,7 +17,7 @@ int test_evalpoly_1(){
   const double tout[5] = {-1.0, 0.0, 0.5, 1.0, 2.0};
   double * yout = malloc(5*sizeof(double));
 
-  evalpoly(nt, order, t, c, nout, tout, yout, 0);
+  poly_eval(nt, order, t, c, nout, tout, yout, 0);
   for (int i=0; i<nout; ++i){
     if (power(tout[i],3) != yout[i])
       ok = 0; break;
@@ -52,7 +52,7 @@ int test_power_1(){
 }
 
 #define NTESTS 3
-static const TestCase t1 = {test_evalpoly_1, "test_evalpoly_1"};
+static const TestCase t1 = {test_poly_eval_1, "test_poly_eval_1"};
 static const TestCase t2 = {test_partfact_1, "test_partfact_1"};
 static const TestCase t3 = {test_power_1, "test_power_1"};
 static const TestCase* test_cases[NTESTS] = {&t1, &t2, &t3};

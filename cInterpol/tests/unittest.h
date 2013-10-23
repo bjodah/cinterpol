@@ -6,6 +6,6 @@ typedef struct testcase_t {
   char* name;
 } TestCase;
 
-int run_tests(int ntests, TestCase** test_cases, char * suite_name);
+int run_tests(int ntests, const TestCase** test_cases, char * suite_name);
 
 #endif

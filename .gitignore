@@ -16,7 +16,7 @@ cInterpol/core.c
 cInterpol/poly_coeff?.c
 cInterpol/tests/__pycache__
 cInterpol/tests/test_newton_interval
-cInterpol/tests/test_evalpoly
+cInterpol/tests/test_poly_eval
 cInterpol/tests/*.pyc
 examples/pp.pkl
 examples/*.pyc

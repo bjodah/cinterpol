@@ -3,7 +3,7 @@ cimport numpy as cnp
 from cpython cimport bool
 
 
-cdef extern int evalpoly(int nt,
+cdef extern int poly_eval(int nt,
                           int order,
                           double * t,
                           double * c,
@@ -58,36 +58,6 @@ cdef int _get_index(double [:] tarr, double tgt, bint allow_extrapol):
                     'Out of bounds (allow_extrapol set to False)')
         else:
             return get_interval(&tarr[0], tarr.size, tgt)
-
-
-# @cython.boundscheck(False)
-# cdef _interpol(double [:] t,
-#                double [:,:] c,
-#                double [:] tout,
-#                double [:] yout,
-#                bint allow_extrapol) nogil:
-#     """
-#     Modify `yout` inplace to store interpolated values at `t`
-#     """
-#     cdef size_t i = 0
-#     cdef size_t nout = tout.shape[0]
-#     cdef size_t it
-#     cdef int j
-#     cdef size_t c_rows = c.shape[0]
-#     cdef int order = c.shape[1]
-#     cdef double y
-#     it = _get_index(t, tout[0], allow_extrapol)
-
-#     while i < nout:
-#         if tout[i] > t[it + 1]:
-#             if it < (c_rows-2):
-#                 it += 1
-#                 continue
-#         y = 0.0
-#         for j in range(order+1):
-#             y += (tout[i] - t[it]) ** j * c[it, j]
-#         yout[i] = y
-#         i += 1
 
 
 cpdef PiecewisePolynomial PiecewisePolynomial_from_coefficients(t, c, allow_extrapol=True):
@@ -169,7 +139,7 @@ cdef class PiecewisePolynomial:
             tout = np.array(t, dtype=np.float64)
 
         yout = np.empty_like(tout)
-        status = evalpoly(
+        status = poly_eval(
             self.t.size, self.c.shape[1]-1, &self.t[0],
             &self.c[0,0], tout.size, &tout[0], &yout[0], deriv)
         assert status == 0
@@ -196,6 +166,7 @@ cdef class PiecewisePolynomial:
     def __reduce__(self):
         return PiecewisePolynomial_from_coefficients, (
             np.asarray(self.t), np.asarray(self.c), self.allow_extrapol)
+
 
 # Below is for wrapping fornberg.f90
 

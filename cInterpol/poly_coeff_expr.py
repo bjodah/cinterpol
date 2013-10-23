@@ -4,7 +4,7 @@
 import sympy
 import re
 
-from .util import Polynomial
+from cInterpol.util import Polynomial
 
 # TODO: use pycompilation for render_mako_template_to
 from mako.template import Template
@@ -114,7 +114,16 @@ def _get_end_block(order):
 
 
 if __name__ == '__main__':
-    blocks = coeff_expr(1)
+    import sys
+    if len(sys.argv) > 1:
+        print('hit')
+        blocks = coeff_expr(int(sys.argv[1]))
+    else:
+        blocks = coeff_expr(1)
+    print '\n'.join(blocks['cse_def'])
+    print ''
+    print '\n'.join(blocks['cse_block'])
+    print ''
     print '\n'.join(blocks['main_block'])
     print ''
     print '\n'.join(blocks['end_block'])

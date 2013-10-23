@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "unittest.h"
 
-int run_tests(int ntests, TestCase** test_cases, char * suite_name){
+int run_tests(int ntests, const TestCase** test_cases, char * suite_name){
   int exit_status=0, result, i;
   TestCase cur_test;
   for (i=0; i<ntests; ++i){
