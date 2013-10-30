@@ -9,7 +9,7 @@ partfact(int order, int deriv);
 
 int
 poly_eval(const SIZE_T nt,
-	  const int order,
+	  const int wy,
 	  const double * const restrict t,
 	  const double * const restrict c,
 	  const SIZE_T nout,

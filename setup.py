@@ -26,47 +26,70 @@ cInterpol_dir = './cInterpol/'
 DEBUG=False # Production?
 
 
-def render_poly_coeff(tempd, maxord=5):
-    from cInterpol.poly_coeff_expr import coeff_expr
-    tmpl_path = './cInterpol/poly_coeffX_template.c'
+def render_coeff(token, tempd, max_wy=3):
+    import cInterpol.coeff_expr
+    coeff_expr = getattr(cInterpol.coeff_expr, token+'_expr')
+    tmpl_path = './cInterpol/'+token+'_coeffX_template.c'
     tgts = []
-    for i in range(1,maxord+1,2):
-        tgts.append(os.path.join(tempd, 'poly_coeff{}.c'.format(i)))
+    for i in range(1,max_wy+1):
+        tgts.append(os.path.join(tempd, token+'_coeff{}.c'.format(i)))
         subsd = coeff_expr(i)
         render_mako_template_to(tmpl_path, tgts[-1], subsd)
-    return tgts
+    return tgts, []
+
+def render_eval(token):
+    # TODO
+    shutil.copy(os.path.join(cInterpol_dir, 'poly_eval.c'), tempd)
+    return ['poly_eval.c'], ['poly_eval.h']
 
 
-def run_compilation(tempd, logger=None):
+def run_compilation(tokens, tempd, max_wy=3, logger=None):
     # Let's compile elemwise.c and wrap it using cython
     # source in elemwise_wrapper.pyx
 
-    poly_coeff_sources = render_poly_coeff(tempd)
+    token_sources = []
+    token_headers = []
+    for cb in [render_coeff, render_eval]:
+        for token in tokens:
+            sources, headers = render_coeff(token, tempd, max_wy)
+            token_sources.extend(sources)
+            token_headers.extend(headers)
 
     for fname in ['core.so']:
         fullpath = os.path.join(cInterpol_dir, fname)
         if os.path.exists(fullpath):
             os.unlink(fullpath)
 
-    for fname in ['core.pyx', 'fornberg.f90', 'newton_interval.c',
-                  'newton_interval.h', 'poly_eval.c', 'poly_eval.h']:
+    render_mako_template_to('core_template.pyx', os.path.join(tempd,'core.pyx'),
+                            subsd={'tokens': tokens, 'max_wy': max_wy})
+
+    for fname in ['fornberg_wrapper.pyx', 'fornberg.f90', 'newton_interval.c',
+                  'newton_interval.h']+token_headers:
         shutil.copy(os.path.join(cInterpol_dir, fname), tempd)
 
-    poly_coeff_objs = compile_sources(
-        poly_coeff_sources+['newton_interval.c']+['poly_eval.c'],
+    token_coeff_objs = compile_sources(
+        token_sources+['newton_interval.c'],
         options=['warn', 'pic', 'fast', 'c99', 'openmp'],
         cwd=tempd, logger=logger, run_linker=False)
 
-    fornberg_obj = fort2obj('fornberg.f90', cwd=tempd,
-                            extra_options=['fast'], logger=logger)
+    fornberg_objs = [fort2obj('fornberg.f90', cwd=tempd,
+                              extra_options=['fast'], logger=logger),
+                     pyx2obj('fornberg_wrapper.pyx', cwd=tempd, logger=logger,
+                             include_numpy=True,
+                             gdb=True if DEBUG else False,
+                             flags=['-g'] if DEBUG else None),
+    ]
+
 
     core_obj = pyx2obj('core.pyx', cwd=tempd, logger=logger,
-                       include_numpy=True, gdb=True, flags=['-g'])
+                       include_numpy=True,
+                       gdb=True if DEBUG else False,
+                       flags=['-g'] if DEBUG else None),
 
     CmplrRnnr, extra_kwargs, preferred_vendor = get_mixed_fort_c_linker(metadir=tempd)
-    so_path = compile_py_so(poly_coeff_objs+[fornberg_obj]+[core_obj],
-                            CmplrRnnr, #FortranCompilerRunner,
-                            cwd=tempd, logger=logger, options=['openmp'])
+    so_path = compile_py_so(
+        token_coeff_objs+fornberg_objs+[core_obj],
+        CmplrRnnr, cwd=tempd, logger=logger, options=['openmp'])
     return get_abspath(so_path, cwd=tempd)
 
 
@@ -78,7 +101,7 @@ class my_build_ext(build_ext.build_ext):
         if not self.dry_run:
             tempd = tempfile.mkdtemp()
             try:
-                so_path = run_compilation(tempd, logger=logger)
+                so_path = run_compilation(['poly'], tempd, logger=logger)
                 shutil.copy(so_path, cInterpol_dir)
             finally:
                 if not DEBUG:

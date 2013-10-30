@@ -44,7 +44,7 @@ int partfact(int order, int deriv){
 }
 
 int poly_eval(const SIZE_T nt,
-	      const int order,
+	      const int wy,
 	      const double * const restrict t,
 	      const double * const restrict c,
 	      const SIZE_T nout,
@@ -57,6 +57,7 @@ int poly_eval(const SIZE_T nt,
   int j;
   SIZE_T ti = nt; // max: nt-1, nt considered "uninitialized"
   SIZE_T oi; // iterators for t, tout and chunk
+  int order = wy*2-1;
 
   if (derivative > order) return 1; // One probably does not want to do that.
 

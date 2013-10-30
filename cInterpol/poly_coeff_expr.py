@@ -15,11 +15,11 @@ def render_mako_template_to(template_path, outpath, subsd):
     ofh.close()
 
 
-def coeff_expr(order):
+def poly_expr(wy):
     """
     Generate coeff fit expressions for order
     """
-    assert order % 2 == 1
+    # assert order % 2 == 1
     wy = (order + 1)/ 2
     wc = (order + 1)
     xend = sympy.symbols('xend')
