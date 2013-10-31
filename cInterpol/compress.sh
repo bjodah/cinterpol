@@ -1,5 +1,8 @@
 #!/bin/bash
 # TODO: make setup.py do this
-rm core.c
-cython core.pyx
-gcc -fpreprocessed -dD -E core.c | bzip2 > core.c.bz2
+for f in {piecewise.c, fornberg_wrapper.c}
+do
+    rm ${f}
+    cython piecewise.pyx
+    gcc -fpreprocessed -dD -E ${f} | bzip2 > ${f}.bz2
+done

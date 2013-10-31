@@ -1,6 +1,11 @@
 try:
-    from core import PiecewisePolynomial, interpolate_by_finite_diff
+    from core import Piecewise_poly as PiecewisePolynomial
+    from core import interpolate_by_finite_diff
 except ImportError:
-    # Enables setup.py to use poly_coeff_expr.py before
-    # shared-object has been built
-    pass
+    import sys
+    if sys.argv[0].endswith('setup.py'):
+        # Enables setup.py to use setup.py before
+        # shared-objects have been built
+        pass
+    else:
+        raise

@@ -1,13 +1,20 @@
 #include <math.h>
 #include <stdbool.h> /* bool */
+%if SIZE_T == 'size_t':
 #include <stdlib.h> /* size_t */
+%endif
+#include "coeff.h"
 
-void poly_coeff${ORDER}(const double *restrict t,
-    const double *restrict y, double *restrict c, const size_t nt){
+%for token in tokens:
+%for wy in range(max_wy):
+void ${token}_coeff${wy}(const double *restrict t,
+			 const double *restrict y,
+			 double *restrict c, 
+			 const ${SIZE_T} nt){
   /*
     solve shifted first order coeff
   */
-  size_t i;
+  ${SIZE_T} i;
   double dt;
 % for expr in cse_def:
   ${expr}
@@ -30,3 +37,5 @@ void poly_coeff${ORDER}(const double *restrict t,
   ${expr}
 % endfor
 }
+%endfor
+%endfor

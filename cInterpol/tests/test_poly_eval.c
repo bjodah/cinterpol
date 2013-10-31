@@ -9,7 +9,7 @@ int test_poly_eval_1(){
   // y=x**3
   int ok = 1;
   int nt=2;
-  int order=3;
+  int wy=2;
   const double t[2] = {0.0, 1.0};
   const double c[8] = {0.0, 0.0,  0.0, 1.0, \
 		      -1.0, 3.0, -3.0, 1.0};
@@ -17,7 +17,7 @@ int test_poly_eval_1(){
   const double tout[5] = {-1.0, 0.0, 0.5, 1.0, 2.0};
   double * yout = malloc(5*sizeof(double));
 
-  poly_eval(nt, order, t, c, nout, tout, yout, 0);
+  poly_eval(nt, wy, t, c, nout, tout, yout, 0);
   for (int i=0; i<nout; ++i){
     if (power(tout[i],3) != yout[i])
       ok = 0; break;
