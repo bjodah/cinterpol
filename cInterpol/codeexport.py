@@ -24,9 +24,9 @@ class ModelCode(C_Code):
                   './cInterpol/eval_template.c',
                   './cInterpol/eval_template.h',]
 
-    def __init__(self, token, max_wy, max_derivative, *args, **kwargs):
+    def __init__(self, token, max_wy, max_deriv, *args, **kwargs):
         self.max_wy = max_wy
-        self.max_derivative = max_derivative
+        self.max_deriv = max_deriv
         self.Model = models[token]
         super(ModelCode, self).__init__(*args, **kwargs)
 
@@ -39,7 +39,6 @@ class ModelCode(C_Code):
         wc = self.wy*2
 
         # Sympy variable symbols for formulating code
-        xend = sympy.symbols('xend')
         ystart = [sympy.Symbol('ystart_' + str(i)) for i in range(wy)]
         yend = [sympy.Symbol('yend_' + str(i)) for i in range(wy)]
 
@@ -49,7 +48,7 @@ class ModelCode(C_Code):
             # x=0
             eqs.append(m.diff(i).subs({m.x: 0}) - ystart[i])
             # x=xend
-            eqs.append(m.diff(i).subs({m.x: xend}) - yend[i])
+            eqs.append(m.diff(i).subs({m.x: self.xend}) - yend[i])
         sol = sympy.solve(eqs, *m.c)
 
         cse_defs, code_block = self.get_cse_code(
@@ -72,13 +71,16 @@ class ModelCode(C_Code):
             c_var = as_c_arr_expr_back(str(ci))
             end_block.append('{} = {};'.format(c_var, code))
 
-        return {'cse_def': cse_def,
-                'cse_block': cse_block,
-                'main_block': main_block,
-                'end_block': end_block,
-                'cse_defs': cse_defs,
-                'wy': wy,
-                'SIZE_T': SIZE_T}
+        return {
+            'SIZE_T': SIZE_T
+            'max_wy': self.max_wy,
+            'max_deriv': self.max_deriv
+            'eval_scalar_expr': None,
+            'eval_deriv_exprs': None,
+            'coeff_cses': None,
+            'coeff_exprs_in_cse': None,
+            'coeff_end_exprs': None,
+        }
 
 
 def render_coeff(token, tempdir, max_wy=3):

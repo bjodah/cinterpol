@@ -9,7 +9,12 @@
 %for token in tokens:
 %for wy in range(max_wy):
 double ${token}_scalar_${wy}(double t, double * c, int deriv){
-  return ${scalar_expr[token]};
+  switch (deriv){
+%for i in range(max_deriv)
+  case (${i})
+    return ${eval_scalar_expr[token][i]};
+%endfor
+   }
 }
 
 void ${token}_eval_${wy}(const ${SIZE_T} nt,
@@ -42,9 +47,9 @@ void ${token}_eval_${wy}(const ${SIZE_T} nt,
 
     // Calculate value of yout[oi] at tout[oi]
     switch (derivative){
-    %for deriv, deriv_expr in enumerate(deriv_cb):
+    %for deriv, deriv_expr in enumerate(eval_deriv_exprs[token]):
       case (${deriv})
-        yout[oi] = ${deriv_expr};
+        yout[oi] = ${deriv_expr[token]};
         break;
     %endfor
     }

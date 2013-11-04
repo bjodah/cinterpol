@@ -16,25 +16,25 @@ void ${token}_coeff${wy}(const double *restrict t,
   */
   ${SIZE_T} i;
   double dt;
-% for expr in cse_def:
-  ${expr}
+% for cse_token, cse_def in coeff_cses[token]:
+  double ${cse_token};
 % endfor
 #pragma omp parallel for private(dt${''.join([', '+str(var_name) for var_name, va_expr in cse_defs])}) // i is implicitly priavte
   for (i=0; i < (nt-1); ++i)
     {
       dt = t[i+1]-t[i];
-    % for expr in cse_block:
-      ${expr}
+    % for cse_token, cse_def in coeff_cses[token]:
+      ${cse_token} = ${cse_def};
     % endfor
 
-    % for expr in main_block:
-      ${expr}
+    % for j, expr in enumerate(coeff_exprs_in_cse[token]):
+      c[i*2*${wy}+${j}] = ${expr};
     % endfor
     }
   i = nt-1;
   dt = t[i]-t[i-1];
-% for expr in end_block:
-  ${expr}
+% for j, expr in coeff_end_epxrs[token]:
+  c[i*2*${wy}+${j}] = ${expr};
 % endfor
 }
 %endfor

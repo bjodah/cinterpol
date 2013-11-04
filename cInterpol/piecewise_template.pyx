@@ -142,7 +142,7 @@ cdef class Piecewise_${token}:
         cdef cnp.ndarray[cnp.float64_t, ndim=1] yout
         cdef cnp.ndarray[cnp.float64_t, ndim=1] tout
 
-        assert deriv <= ${max_derivative}
+        assert deriv <= ${max_deriv}
         if isinstance(t, np.ndarray):
             tout = np.ascontiguousarray(t)
         else:
