@@ -10,7 +10,7 @@ from newton_interval cimport get_interval
 %for token in tokens:
 %for i in range(1,max_wy+1):
 
-cdef extern void ${token}_eval_${wy}(int nt,
+cdef extern void ${token}_eval_${i}(int nt,
                               int wy,
                               double * t,
                               double * c,
@@ -20,7 +20,7 @@ cdef extern void ${token}_eval_${wy}(int nt,
                               int derivative
                           )
 
-cdef extern int ${token}_scalar_${wy}(double t,
+cdef extern int ${token}_scalar_${i}(double t,
                                 double * c,
                                 int derivative
                           )
@@ -72,8 +72,7 @@ cdef int _get_index(double [:] tarr, double tgt, bint allow_extrapol):
             return get_interval(&tarr[0], tarr.size, tgt)
 
 
-
-%for token in tokens
+%for token in tokens:
 cpdef Piecewise_${token} Piecewise_${token}_from_coefficients(
     t, c, allow_extrapol=True):
     # Classmethods not supported by cdef extension types,
@@ -142,7 +141,7 @@ cdef class Piecewise_${token}:
         cdef cnp.ndarray[cnp.float64_t, ndim=1] yout
         cdef cnp.ndarray[cnp.float64_t, ndim=1] tout
 
-        assert deriv <= ${max_deriv}
+        assert deriv <= ${max_derivative}
         if isinstance(t, np.ndarray):
             tout = np.ascontiguousarray(t)
         else:
@@ -163,7 +162,7 @@ cdef class Piecewise_${token}:
                 &yout[0], deriv)
         %for i in range(2, max_wy+1):
         elif self.wy == ${i}:
-            ${token}_eval_${wy}(
+            ${token}_eval_${i}(
                 self.t.size, self.wy, &self.t[0],
                 &self.c[0,0], tout.size, &tout[0], &yout[0], deriv)
         %endfor
@@ -171,24 +170,9 @@ cdef class Piecewise_${token}:
         return yout
 
 
-    # def derivative(self, int nth=1):
-    #     if nth == 0:
-    #         return self
-    #     if nth == 1:
-    #         assert self.wy >= 1
-    #         new_c = self.c[:,1:]*np.arange(1, self.wy*2).reshape(
-    #             (1, self.wy*2-1))
-    #         return Piecewise_${token}_from_coefficients(
-    #             self.t, new_c, allow_extrapol=self.allow_extrapol)
-    #     elif nth > 1:
-    #         # recursive solution
-    #         assert nth <= self.wy*2-1
-    #         return self.derivative(1).derivative(nth-1)
-    #     else:
-    #         raise ValueError("That would be the integral?")
-
-
     def __reduce__(self):
         return Piecewise_${token}_from_coefficients, (
             np.asarray(self.t), np.asarray(self.c),
             self.allow_extrapol)
+
+%endfor

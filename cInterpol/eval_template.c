@@ -8,7 +8,8 @@
 
 %for token in tokens:
 %for wy in range(max_wy):
-double ${token}_scalar_${wy}(double t, double * c, int deriv){
+double ${token}_scalar_${wy}(double t, double * c, int deriv)
+{
   switch (deriv){
 %for i in range(max_deriv)
   case (${i})

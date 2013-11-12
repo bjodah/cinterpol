@@ -3,23 +3,25 @@
 # stdlib imports
 import sympy
 import re
+from collections import defaultdict
 
 # external imports
+from pycompilation.codeexport import C_Code
 from pycompilation.util import render_mako_template_to
 
 # project internal imports
 from cInterpol.model import models
-from cInterpol.codeexport import C_Code
+
 
 SIZE_T = 'int'
 
 class ModelCode(C_Code):
 
 
-    source_files = ['./cInterpol/coeff.c',
-                    './cInterpol/eval.c']
+    source_files = ['coeff.c',
+                    'eval.c']
 
-    _templates = ['./cInterpol/coeff_template.c',
+    templates = ['./cInterpol/coeff_template.c',
                   './cInterpol/coeff_template.h',
                   './cInterpol/eval_template.c',
                   './cInterpol/eval_template.h',]
@@ -32,55 +34,49 @@ class ModelCode(C_Code):
 
 
     def variables_for_wy(self, wy):
-
-
-    def variables(self):
         # number of cofficients per peicewise segment
-        wc = self.wy*2
+        wc = wy*2
 
         # Sympy variable symbols for formulating code
-        ystart = [sympy.Symbol('ystart_' + str(i)) for i in range(wy)]
-        yend = [sympy.Symbol('yend_' + str(i)) for i in range(wy)]
+        y0 = [sympy.Symbol('y0_' + str(i)) for i in range(wy)]
+        y1 = [sympy.Symbol('y1_' + str(i)) for i in range(wy)]
 
-        m = self.Model(self.wy)
+        m = self.Model(wy)
         eqs = []
         for i in range(wy):
-            # x=0
-            eqs.append(m.diff(i).subs({m.x: 0}) - ystart[i])
-            # x=xend
-            eqs.append(m.diff(i).subs({m.x: self.xend}) - yend[i])
+            # x=x0
+            eqs.append(m.diff(i).subs({m.x: 0}) - y0[i])
+            # x=x1
+            eqs.append(m.diff(i).subs({m.x: m.x1}) - y1[i])
         sol = sympy.solve(eqs, *m.c)
-
         cse_defs, code_block = self.get_cse_code(
-            self._neqsys.exprs, 'cse', dummy_groups)
+            sol, 'cse')
 
-        # End block
-        eqs = []
-        for i in range(wy):
-            # x=0
-            eqs.append(m.diff(i).subs({m.x: xstart}) - ystart[i])
-            # x=xend
-            eqs.append(m.diff(i).subs({m.x: 0}) - yend[i])
-
-        m_end = models[token](wy)
-        sol = sympy.solve(eqs, *m.c)
         end_block = []
-        for i, ci in enumerate(m.c):
-            code = sympy.ccode(sol[ci])
-            code = as_c_arr_expr_back(code)
-            c_var = as_c_arr_expr_back(str(ci))
+        for ci in m.c:
+            code = self.as_arrayified_code(sol[ci])
+            c_var = self.as_arrayified_code(ci)
             end_block.append('{} = {};'.format(c_var, code))
 
-        return {
-            'SIZE_T': SIZE_T
+        return{
             'max_wy': self.max_wy,
-            'max_deriv': self.max_deriv
+            'max_deriv': self.max_deriv,
             'eval_scalar_expr': None,
             'eval_deriv_exprs': None,
             'coeff_cses': None,
             'coeff_exprs_in_cse': None,
             'coeff_end_exprs': None,
         }
+
+    def variables(self):
+        dd = defaultdict(dict)
+        for wy in range(1, self.max_wy+1):
+            d = self.variables_for_wy(wy)
+            for k,v in d.items():
+                dd[k][wy] = v
+
+        dd.update({'SIZE_T': SIZE_T})
+        return dd
 
 
 def render_coeff(token, tempdir, max_wy=3):
