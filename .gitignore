@@ -18,7 +18,7 @@ cInterpol/tests/__pycache__
 cInterpol/tests/test_newton_interval
 cInterpol/tests/test_poly_eval
 cInterpol/tests/test_fornberg
-cInterpol/tests/test_fornberg.mod
+cInterpol/tests/*.mod
 cInterpol/tests/*.pyc
 examples/pp.pkl
 examples/*.pyc

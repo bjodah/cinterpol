@@ -143,11 +143,9 @@ cdef class PiecewisePolynomial:
             tout = np.array(t, dtype=np.float64)
 
         yout = np.empty_like(tout)
-        print("About to call poly_eval()") ## DEBUG
         status = poly_eval(
             self.t.size, self.c.shape[1]-1, &self.t[0],
             &self.c[0,0], tout.size, &tout[0], &yout[0], deriv)
-        print("Done calling poly_eval()") ## DEBUG
         assert status == 0
         return yout
 
