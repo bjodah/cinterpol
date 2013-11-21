@@ -1,5 +1,5 @@
 #include <math.h>
-#include <stdio.h>
+/* #include <stdio.h> */
 #include "newton_interval.h"
 #include "poly_eval.h"
 
@@ -55,32 +55,29 @@ int poly_eval(const SIZE_T nt,
   // derivative = 0 evaluates function value, 1 evaluates first
   // derivative and so on..
   int j;
-  SIZE_T ti = nt; // max: nt-1, nt considered "uninitialized"
+  SIZE_T ti = nt/2; // max: nt-1, nt considered "uninitialized"
   SIZE_T oi; // iterators for t, tout and chunk
 
   if (derivative > order) return 1; // One probably does not want to do that.
 
 #pragma omp parallel for private(j) firstprivate(ti) schedule(static)
   for (oi=0; oi<nout; ++oi){
-    // Set ti
-    if (ti == nt){ // ti == nt considered uninitialized!
-      ti = get_interval(t, nt, tout[oi]);
-      if (ti == -1)
-	ti = 0;
-    }
-    else{
-      ti = get_interval_from_guess(t, nt, tout[oi], ti);
-      if (ti == -1)
-	ti = 0;
-    }
+    /* printf ("(About to call get_interval_from_guess)\n"); */
+    /* printf ("with nt=%d tout[%d]=%5.2f ti=%d\n", nt, oi, tout[oi], ti); fflush(stdout); */
+    ti = get_interval_from_guess(t, nt, tout[oi], ti);
+    /* printf ("Back from get_interval_from_guess\n"); fflush(stdout); */
+    if (ti == -1)
+      ti = 0;
 
     // Calculate value of yout[oi] at tout[oi]
     yout[oi] = 0.0;
-    for (j=derivative; j<order+1; ++j)
+    for (j=derivative; j<order+1; ++j){
+      /* printf ("j=%d, order=%d\n",j,order); fflush(stdout); */
       yout[oi] += partfact(j, derivative) * \
 	power(tout[oi] - t[ti], j-derivative) * \
 	c[ti*(order+1)+j];
+    }
   }
-  
+  /* printf ("returning from poly_eval\n"); */
   return 0; // All went well
 }

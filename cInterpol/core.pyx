@@ -14,6 +14,7 @@ cdef extern int poly_eval(int nt,
                       )
 
 cdef extern size_t get_interval(const double arr[], const size_t N, const double t)
+cdef extern size_t get_interval_from_guess(const double arr[], const size_t N, const double t, int i)
 cdef extern void poly_coeff1(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff3(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff5(const double t[], const double y[], double c[], const size_t nt)
@@ -43,21 +44,24 @@ cdef bint _check_strict_monotonicity(double * arr, int n) nogil:
     return True
 
 
-cdef int _get_index(double [:] tarr, double tgt, bint allow_extrapol):
-        if tgt < tarr[0]:
-            if allow_extrapol == True:
-                return 0
-            else:
-                raise ValueError(
-                    'Out of bounds (allow_extrapol set to False)')
-        elif tgt > tarr[-1]:
-            if allow_extrapol == True:
-                return tarr.size-1
-            else:
-                raise ValueError(
-                    'Out of bounds (allow_extrapol set to False)')
+cdef int _get_index(double [:] tarr, double tgt, bint allow_extrapol, int guess = -1):
+    if tgt < tarr[0]:
+        if allow_extrapol == True:
+            return 0
         else:
+            raise ValueError(
+                'Out of bounds (allow_extrapol set to False)')
+    elif tgt > tarr[-1]:
+        if allow_extrapol == True:
+            return tarr.size-1
+        else:
+            raise ValueError(
+                'Out of bounds (allow_extrapol set to False)')
+    else:
+        if guess == -1:
             return get_interval(&tarr[0], tarr.size, tgt)
+        else:
+            return get_interval_from_guess(&tarr[0], tarr.size, tgt, guess)
 
 
 cpdef PiecewisePolynomial PiecewisePolynomial_from_coefficients(t, c, allow_extrapol=True):
@@ -139,9 +143,11 @@ cdef class PiecewisePolynomial:
             tout = np.array(t, dtype=np.float64)
 
         yout = np.empty_like(tout)
+        print("About to call poly_eval()") ## DEBUG
         status = poly_eval(
             self.t.size, self.c.shape[1]-1, &self.t[0],
             &self.c[0,0], tout.size, &tout[0], &yout[0], deriv)
+        print("Done calling poly_eval()") ## DEBUG
         assert status == 0
         return yout
 
@@ -224,8 +230,8 @@ def interpolate_by_finite_diff(double [:] xdata, double [:] ydata,
 
     for i in range(nout):
         xtgt=xout[i]
-        j = max(0, get_interval(
-            &xdata_arr[0],xdata_arr.shape[0], xtgt))
+        j = max(0, get_interval_from_guess(
+            &xdata_arr[0],xdata_arr.shape[0], xtgt, j))
         j = min(j, xdata_arr.shape[0]-nin)
         apply_fd(&nin,
                  &maxorder,

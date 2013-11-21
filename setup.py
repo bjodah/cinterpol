@@ -12,18 +12,24 @@ The setup requires pycompilation (www.github.com/bjodah/pycompilation)
 # Python standard libaray imports
 import os
 import logging
-import shutil
 import tempfile
+import shutil
 from distutils.core import setup
 from distutils.command import build_ext
 
 from pycompilation import pyx2obj, compile_sources, compile_py_so, fort2obj, get_mixed_fort_c_linker
-from pycompilation.util import render_mako_template_to, get_abspath
+from pycompilation.util import render_mako_template_to, get_abspath, copy
 
 
 cInterpol_dir = './cInterpol/'
 
-DEBUG=False # Production?
+if os.path.exists('./.git'):
+    # Production?
+    DEBUG=True
+    FAST=True
+else:
+    DEBUG=False
+    FAST=False
 
 
 def render_poly_coeff(tempd, maxord=5):
@@ -37,7 +43,7 @@ def render_poly_coeff(tempd, maxord=5):
     return tgts
 
 
-def run_compilation(tempd, logger=None):
+def run_compilation(tempd, **kwargs):
     # Let's compile elemwise.c and wrap it using cython
     # source in elemwise_wrapper.pyx
 
@@ -50,23 +56,27 @@ def run_compilation(tempd, logger=None):
 
     for fname in ['core.pyx', 'fornberg.f90', 'newton_interval.c',
                   'newton_interval.h', 'poly_eval.c', 'poly_eval.h']:
-        shutil.copy(os.path.join(cInterpol_dir, fname), tempd)
+        copy(os.path.join(cInterpol_dir, fname), tempd,
+             only_update=kwargs.get('only_update', False))
+
+    extra_options = ['fast'] if FAST else []
 
     poly_coeff_objs = compile_sources(
         poly_coeff_sources+['newton_interval.c']+['poly_eval.c'],
-        options=['warn', 'pic', 'fast', 'c99', 'openmp'],
-        cwd=tempd, logger=logger, run_linker=False)
+        options=['warn', 'pic', 'c99', 'openmp'],
+        extra_options=extra_options,
+        cwd=tempd, run_linker=False, **kwargs)
 
     fornberg_obj = fort2obj('fornberg.f90', cwd=tempd,
-                            extra_options=['fast'], logger=logger)
+                            extra_options=extra_options, **kwargs)
 
-    core_obj = pyx2obj('core.pyx', cwd=tempd, logger=logger,
-                       include_numpy=True, gdb=True, flags=['-g'])
+    core_obj = pyx2obj('core.pyx', cwd=tempd,
+                       include_numpy=True, gdb=True,
+                       flags=['-g'], **kwargs)
 
     CmplrRnnr, extra_kwargs, preferred_vendor = get_mixed_fort_c_linker(metadir=tempd)
     so_path = compile_py_so(poly_coeff_objs+[fornberg_obj]+[core_obj],
-                            CmplrRnnr, #FortranCompilerRunner,
-                            cwd=tempd, logger=logger, options=['openmp'])
+                            CmplrRnnr, cwd=tempd, options=['openmp'], **kwargs)
     return get_abspath(so_path, cwd=tempd)
 
 
@@ -76,10 +86,14 @@ class my_build_ext(build_ext.build_ext):
         logging.basicConfig(level=logging.INFO)
         logger = logging.getLogger(__name__)
         if not self.dry_run:
-            tempd = tempfile.mkdtemp()
+            tempd = os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                'build')
+            if not os.path.exists(tempd): os.mkdir(tempd)
+            #tempd = tempfile.mkdtemp()
             try:
-                so_path = run_compilation(tempd, logger=logger)
-                shutil.copy(so_path, cInterpol_dir)
+                so_path = run_compilation(tempd, logger=logger, only_update=True)
+                copy(so_path, cInterpol_dir)
             finally:
                 if not DEBUG:
                     shutil.rmtree(tempd)
