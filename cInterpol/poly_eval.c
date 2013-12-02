@@ -1,11 +1,10 @@
 #include <math.h>
-/* #include <stdio.h> */
 #include "newton_interval.h"
 #include "poly_eval.h"
 
 // poly_eval.h defines a SIZE_T (now: int - 32bit signed integer => max ~= 2e9)
 
-double power(double num, int exp) {
+static double power(const double num, const int exp) {
   // Only valid for positive exp
   // should be fast!
   double result;
@@ -23,7 +22,7 @@ double power(double num, int exp) {
 }
 
 
-int partfact(int order, int deriv){
+static int partfact(const int order, const int deriv){
   // Example partfact(3,0) == 1
   //         partfact(3,1) == 3
   //         partfact(3,2) == 3*2
@@ -62,22 +61,17 @@ int poly_eval(const SIZE_T nt,
 
 #pragma omp parallel for private(j) firstprivate(ti) schedule(static)
   for (oi=0; oi<nout; ++oi){
-    /* printf ("(About to call get_interval_from_guess)\n"); */
-    /* printf ("with nt=%d tout[%d]=%5.2f ti=%d\n", nt, oi, tout[oi], ti); fflush(stdout); */
     ti = get_interval_from_guess(t, nt, tout[oi], ti);
-    /* printf ("Back from get_interval_from_guess\n"); fflush(stdout); */
     if (ti == -1)
       ti = 0;
 
     // Calculate value of yout[oi] at tout[oi]
     yout[oi] = 0.0;
     for (j=derivative; j<order+1; ++j){
-      /* printf ("j=%d, order=%d\n",j,order); fflush(stdout); */
       yout[oi] += partfact(j, derivative) * \
 	power(tout[oi] - t[ti], j-derivative) * \
 	c[ti*(order+1)+j];
     }
   }
-  /* printf ("returning from poly_eval\n"); */
   return 0; // All went well
 }
