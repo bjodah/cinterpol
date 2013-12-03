@@ -193,9 +193,9 @@ cdef bint is_equidistant(double [:] x, double abstol=1e-9,
     return True
 
 
-def interpolate_by_finite_diff(double [:] xdata, double [:] ydata,
-                               double [:] xout, int maxorder=0,
-                               int ntail=2, int nhead=2):
+def interpolate_by_finite_diff(
+        double [:] xdata, double [:] ydata, xout,
+        int maxorder=0, int ntail=2, int nhead=2):
     """
     Interpolates function value (or its derivative - `order`)
     at xout based on finite difference using provided xdata and
@@ -215,7 +215,7 @@ def interpolate_by_finite_diff(double [:] xdata, double [:] ydata,
     cdef cnp.ndarray[cnp.float64_t, ndim=1] xout_arr = \
         np.ascontiguousarray(xout)
     cdef int nin = ntail+nhead
-    cdef int nout = xout.shape[0]
+    cdef int nout = xout_arr.size
     cdef cnp.ndarray[cnp.float64_t, ndim=1] out = np.zeros(maxorder+1)
     cdef cnp.ndarray[cnp.float64_t, ndim=2] yout = \
         np.zeros((nout, maxorder+1), order='C')
@@ -227,7 +227,7 @@ def interpolate_by_finite_diff(double [:] xdata, double [:] ydata,
     assert nhead+ntail >= maxorder+1
 
     for i in range(nout):
-        xtgt=xout[i]
+        xtgt=xout_arr[i]
         j = max(0, get_interval_from_guess(
             &xdata_arr[0],xdata_arr.shape[0], xtgt, j))
         j = min(j, xdata_arr.shape[0]-nin)
