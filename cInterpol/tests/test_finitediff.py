@@ -4,7 +4,13 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import numpy as np
 
-from cInterpol import interpolate_by_finite_diff
+from cInterpol import interpolate_by_finite_diff, derivatives_at_point_by_finite_diff
+
+def test_derivatives_at_point_by_finite_diff():
+    out = derivatives_at_point_by_finite_diff(
+        np.array([.0, .5, 1.]),
+        np.array([.0, .25, 1.]), .5, 2) # y=x**2
+    assert np.allclose(np.array([.25, 1.0, 2.0]), out)
 
 def test_interpolate_by_finite_diff():
     order = 0

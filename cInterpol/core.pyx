@@ -193,8 +193,24 @@ cdef bint is_equidistant(double [:] x, double abstol=1e-9,
     return True
 
 
+def derivatives_at_point_by_finite_diff(
+        double [::1] xdata, double [::1] ydata, double xout,
+        int maxorder):
+    """
+    >>> derivatives_at_point_by_finite_diff(np.array([.0, .5, 1.]),
+            np.array([.0, .25, 1.]), .5, 2) # y=x**2
+    array([.25, 1.0, 2.0]) # (x**2, 2x, 2)
+    """
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] yout = np.zeros(maxorder+1)
+    assert xdata.size == ydata.size
+    assert xdata.size >= maxorder+1
+    cdef int nin = xdata.size
+    apply_fd(&nin, &maxorder, &xdata[0], &ydata[0], &xout, &yout[0])
+    return yout
+
+
 def interpolate_by_finite_diff(
-        double [:] xdata, double [:] ydata, xout,
+        double [:] xdata, double [:] ydata, double [:] xout,
         int maxorder=0, int ntail=2, int nhead=2):
     """
     Interpolates function value (or its derivative - `order`)
@@ -203,7 +219,7 @@ def interpolate_by_finite_diff(
     xdata is regularly spaced this algortihm is not the optimal
     to use with respect to performance.
 
-    The underlying algorithm (here implemented in C) is from:
+    The underlying algorithm is from:
     Generation of Finite Difference Formulas on Arbitrarily
         Spaced Grids, Bengt Fornberg
     Mathematics of compuation, 51, 184, 1988, 699-706
