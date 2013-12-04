@@ -20,5 +20,5 @@ cInterpol/tests/test_poly_eval
 cInterpol/tests/test_fornberg
 cInterpol/tests/*.mod
 cInterpol/tests/*.pyc
-examples/pp.pkl
+examples/sine_pp.pkl
 examples/*.pyc

@@ -1,4 +1,3 @@
 In order to run tests:
 build extension module by running "python setup.py build_ext --inplace" in root of git-project (../..)
-run (python) tests by invoking "env PYTHONPATH=$PYTHONPATH:`pwd`/../.. python test_core.py" in this directory
-run c tests by making the targets in the Makefile and then invoking the executables.
+run  tests by invoking "env PYTHONPATH=$PYTHONPATH:`pwd`/../.. make tests" in this directory

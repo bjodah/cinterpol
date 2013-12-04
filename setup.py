@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
 Custom setup script for cInterpol to generate sources and
@@ -17,7 +17,7 @@ import shutil
 from distutils.core import setup
 from distutils.command import build_ext
 
-from pycompilation import pyx2obj, compile_sources, compile_py_so, fort2obj, get_mixed_fort_c_linker
+from pycompilation import pyx2obj, compile_sources, compile_py_so, src2obj, get_mixed_fort_c_linker
 from pycompilation.util import render_mako_template_to, get_abspath, copy
 
 
@@ -26,10 +26,8 @@ cInterpol_dir = './cInterpol/'
 if os.path.exists('./.git'):
     # Production?
     DEBUG=True
-    FAST=True
 else:
     DEBUG=False
-    FAST=False
 
 
 def render_poly_coeff(tempd, maxord=5):
@@ -59,24 +57,27 @@ def run_compilation(tempd, **kwargs):
         copy(os.path.join(cInterpol_dir, fname), tempd,
              only_update=kwargs.get('only_update', False))
 
-    extra_options = ['fast'] if FAST else []
-
     poly_coeff_objs = compile_sources(
         poly_coeff_sources+['newton_interval.c']+['poly_eval.c'],
-        options=['warn', 'pic', 'c99', 'openmp'],
-        extra_options=extra_options,
+        options=['warn', 'pic', 'openmp'],
+        std='c99',
         cwd=tempd, run_linker=False, **kwargs)
 
-    fornberg_obj = fort2obj('fornberg.f90', cwd=tempd,
-                            extra_options=extra_options, **kwargs)
+    print('ABOUT TO CALL ON FORNBERG')
+    fornberg_obj = src2obj(
+        'fornberg.f90',
+        options=['warn', 'pic', 'fast',  'openmp'],
+        cwd=tempd, **kwargs)
+    print('CALLED FORNBERG')
 
     core_obj = pyx2obj('core.pyx', cwd=tempd,
                        include_numpy=True, gdb=True,
+                       options=['warn', 'fast'],
                        flags=['-g'], **kwargs)
 
     CmplrRnnr, extra_kwargs, preferred_vendor = get_mixed_fort_c_linker(metadir=tempd)
     so_path = compile_py_so(poly_coeff_objs+[fornberg_obj]+[core_obj],
-                            CmplrRnnr, cwd=tempd, options=['openmp'], **kwargs)
+                            CmplrRnnr, cwd=tempd, options=['warn', 'pic', 'fast', 'openmp'], **kwargs)
     return get_abspath(so_path, cwd=tempd)
 
 

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "../poly_eval.h"
+#include "../poly_eval.c" // we need to test some static functions
 #include "unittest.h"
 
 int test_poly_eval_1(){

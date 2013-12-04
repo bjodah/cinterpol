@@ -172,7 +172,7 @@ cdef class PiecewisePolynomial:
             np.asarray(self.t), np.asarray(self.c), self.allow_extrapol)
 
 
-# Below is for wrapping fornberg.f90
+# Below is for wrapping fornberg.f03
 
 cdef extern void apply_fd(int * nin, int * maxorder, double * xdata, double * ydata, double * xtgt, double * out)
 

@@ -2,11 +2,6 @@
 #define _POLY_EVAL_H_
 #define SIZE_T int // 32bit signed integer is ~2e9
 
-double power(double num, int exp);
-
-int
-partfact(int order, int deriv);
-
 int
 poly_eval(const SIZE_T nt,
 	  const int order,
