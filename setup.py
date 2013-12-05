@@ -18,7 +18,7 @@ from distutils.core import setup
 from distutils.command import build_ext
 
 from pycompilation import pyx2obj, compile_sources, compile_py_so, src2obj, get_mixed_fort_c_linker
-from pycompilation.util import render_mako_template_to, get_abspath, copy
+from pycompilation.util import render_mako_template_to, get_abspath, copy, MetaReaderWriter
 
 
 cInterpol_dir = './cInterpol/'
@@ -37,8 +37,23 @@ def render_poly_coeff(tempd, maxord=5):
     for i in range(1,maxord+1,2):
         tgts.append(os.path.join(tempd, 'poly_coeff{}.c'.format(i)))
         subsd = coeff_expr(i)
-        render_mako_template_to(tmpl_path, tgts[-1], subsd)
+
+        metakey = 'poly_coeff_subsd_'+str(i)
+        meta = MetaReaderWriter('.meta_poly_coeff')
+        try:
+            prev_subsd = meta.get_from_metadata_file(
+                cInterpol_dir, metakey)
+        except (IOError, KeyError):
+            prev_subsd = None
+        outpath = render_mako_template_to(tmpl_path, tgts[-1], subsd,
+                                only_update=True, prev_subsd=prev_subsd)
+        if outpath:
+            meta.save_to_metadata_file(cInterpol_dir, metakey, subsd)
     return tgts
+
+
+def prebuild_invnewton_wrapper(dst, **kwargs):
+    pyxobj = pyx2obj('invnewton_wrapper.pyx', dst, metadir=dst, **kwargs)
 
 
 def run_compilation(tempd, **kwargs):
@@ -63,12 +78,10 @@ def run_compilation(tempd, **kwargs):
         std='c99',
         cwd=tempd, run_linker=False, **kwargs)
 
-    print('ABOUT TO CALL ON FORNBERG')
     fornberg_obj = src2obj(
         'fornberg.f90',
         options=['warn', 'pic', 'fast',  'openmp'],
         cwd=tempd, **kwargs)
-    print('CALLED FORNBERG')
 
     core_obj = pyx2obj('core.pyx', cwd=tempd,
                        include_numpy=True, gdb=True,
@@ -95,6 +108,9 @@ class my_build_ext(build_ext.build_ext):
             try:
                 so_path = run_compilation(tempd, logger=logger, only_update=True)
                 copy(so_path, cInterpol_dir)
+                prebuild_invnewton_wrapper(
+                    'prebuilt/', cwd=cInterpol_dir, logger=logger)
+
             finally:
                 if not DEBUG:
                     shutil.rmtree(tempd)

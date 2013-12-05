@@ -22,3 +22,6 @@ cInterpol/tests/*.mod
 cInterpol/tests/*.pyc
 examples/sine_pp.pkl
 examples/*.pyc
+cInterpol/.meta_poly_coeff
+cInterpol/prebuilt/
+examples/build_invnewton/

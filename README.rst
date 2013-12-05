@@ -19,6 +19,24 @@ Feel free to enhance modify and make pull request at `github`__ to
 
 __ cinterpol_
 
+Capabilities
+============
+cInterpol has a few related capabilies:
+
+PiecewisePolynomial
+-------------------
+Original motivation
+
+Finite difference (inter/extra)polation of derivatives
+------------------------------------------------------
+Bengt Fornberg formulae implemented in Fortran 90.
+
+InvNewton
+---------
+InvNewton still has bugs (try changing to -0.7 and it works): 
+``` python -m pudb invnewton_main.py -y 'tan(x)' -l 5 -o 3 --sample-N 1000 --x-lo -0.8 --x-hi 1.0 ```
+
+
 Installation
 ============
 To install run `python setup.py install`.
