@@ -52,10 +52,6 @@ def render_poly_coeff(tempd, maxord=5):
     return tgts
 
 
-def prebuild_invnewton_wrapper(dst, **kwargs):
-    pyxobj = pyx2obj('invnewton_wrapper.pyx', dst, metadir=dst, **kwargs)
-
-
 def run_compilation(tempd, **kwargs):
     # Let's compile elemwise.c and wrap it using cython
     # source in elemwise_wrapper.pyx
