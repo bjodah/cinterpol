@@ -63,8 +63,8 @@ def run_compilation(tempd, **kwargs):
         if os.path.exists(fullpath):
             os.unlink(fullpath)
 
-    for fname in ['core.pyx', 'fornberg.f90', 'newton_interval.c',
-                  'newton_interval.h', 'poly_eval.c', 'poly_eval.h']:
+    for fname in ['core.pyx', 'newton_interval/src/newton_interval.c',
+                  'newton_interval/include/newton_interval.h', 'poly_eval.c', 'poly_eval.h']:
         copy(os.path.join(cInterpol_dir, fname), tempd,
              only_update=kwargs.get('only_update', False))
 
@@ -103,9 +103,7 @@ class my_build_ext(build_ext.build_ext):
             #tempd = tempfile.mkdtemp()
             try:
                 so_path = run_compilation(tempd, logger=logger, only_update=True)
-                copy(so_path, cInterpol_dir)
-                prebuild_invnewton_wrapper(
-                    'prebuilt/', cwd=cInterpol_dir, logger=logger)
+                copy(so_path, cInterpol_dir, only_update=True)
 
             finally:
                 if not DEBUG:

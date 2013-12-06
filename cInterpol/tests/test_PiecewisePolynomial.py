@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+
 import pytest
 import numpy as np
 
+from pycompilation.util import term_fmt
+
 from cInterpol import PiecewisePolynomial
 from cInterpol.util import Polynomial
-
 
 t1 = np.array([0.0, 1.0])
 y1 = np.array([[0.0, 0.0, 0.0],
@@ -76,3 +79,5 @@ if __name__ == '__main__':
     test_PiecewisePolynomial_call()
     for args in arg_cases:
         test_PiecewisePolynomial(args)
+    print("{} {}".format(__file__, term_fmt('passed', ('green', 'black'))))
+    sys.exit(0)
