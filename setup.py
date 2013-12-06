@@ -21,7 +21,8 @@ from pycompilation import pyx2obj, compile_sources, link_py_so, src2obj, get_mix
 from pycompilation.util import render_mako_template_to, copy, MetaReaderWriter
 
 
-cInterpol_dir = os.path.join(os.path.dirname(__file__), 'cInterpol')
+cInterpol_dir = os.path.join(os.path.abspath(
+    os.path.dirname(__file__)), 'cInterpol')
 
 if os.path.exists('./.git'):
     # Production?
