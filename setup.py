@@ -17,11 +17,11 @@ import shutil
 from distutils.core import setup
 from distutils.command import build_ext
 
-from pycompilation import pyx2obj, compile_sources, compile_py_so, src2obj, get_mixed_fort_c_linker
-from pycompilation.util import render_mako_template_to, get_abspath, copy, MetaReaderWriter
+from pycompilation import pyx2obj, compile_sources, link_py_so, src2obj, get_mixed_fort_c_linker
+from pycompilation.util import render_mako_template_to, copy, MetaReaderWriter
 
 
-cInterpol_dir = './cInterpol/'
+cInterpol_dir = os.path.join(os.path.dirname(__file__), 'cInterpol')
 
 if os.path.exists('./.git'):
     # Production?
@@ -64,52 +64,44 @@ def run_compilation(tempd, **kwargs):
             os.unlink(fullpath)
 
     for fname in ['core.pyx', 'newton_interval/src/newton_interval.c',
-                  'newton_interval/include/newton_interval.h', 'poly_eval.c', 'poly_eval.h']:
+                  'poly_eval.c', 'poly_eval.h']:
         copy(os.path.join(cInterpol_dir, fname), tempd,
              only_update=kwargs.get('only_update', False))
 
     poly_coeff_objs = compile_sources(
         poly_coeff_sources+['newton_interval.c']+['poly_eval.c'],
-        options=['warn', 'pic', 'openmp'],
+        options=['warn', 'pic', 'fast', 'openmp'],
         std='c99',
         cwd=tempd, run_linker=False, **kwargs)
-
-    fornberg_obj = src2obj(
-        'fornberg.f90',
-        options=['warn', 'pic', 'fast',  'openmp'],
-        cwd=tempd, **kwargs)
 
     core_obj = pyx2obj('core.pyx', cwd=tempd,
                        include_numpy=True, gdb=True,
                        options=['warn', 'fast'],
                        flags=['-g'], **kwargs)
 
-    CmplrRnnr, extra_kwargs, preferred_vendor = get_mixed_fort_c_linker(metadir=tempd)
-    so_path = compile_py_so(poly_coeff_objs+[fornberg_obj]+[core_obj],
-                            CmplrRnnr, cwd=tempd, options=['warn', 'pic', 'fast', 'openmp'], **kwargs)
-    return get_abspath(so_path, cwd=tempd)
+    so_path = link_py_so(
+        poly_coeff_objs+[core_obj], cwd=tempd,
+        options=['warn', 'pic', 'fast', 'openmp'], **kwargs)
+    return so_path
 
 
 class my_build_ext(build_ext.build_ext):
     def run(self):
-        # honor the --dry-run flag
         logging.basicConfig(level=logging.INFO)
         logger = logging.getLogger(__name__)
-        if not self.dry_run:
+        if not self.dry_run: # honor the --dry-run flag
             tempd = os.path.join(
                 os.path.abspath(os.path.dirname(__file__)),
                 'build')
             if not os.path.exists(tempd): os.mkdir(tempd)
             #tempd = tempfile.mkdtemp()
-            try:
-                so_path = run_compilation(tempd, logger=logger, only_update=True)
-                copy(so_path, cInterpol_dir, only_update=True)
-
-            finally:
-                if not DEBUG:
-                    shutil.rmtree(tempd)
-        else:
-            logger.info('did nothing.')
+            so_path = run_compilation(
+                tempd, logger=logger, only_update=True,
+                inc_dirs=[os.path.join(cInterpol_dir,'newton_interval/include')]
+            )
+            copy(so_path, cInterpol_dir, only_update=True)
+            if not DEBUG:
+                shutil.rmtree(tempd)
 
 
 cmdclass = {'build_ext': my_build_ext}

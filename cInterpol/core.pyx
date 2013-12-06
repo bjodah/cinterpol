@@ -3,6 +3,7 @@ import numpy as np
 cimport numpy as cnp
 from cpython cimport bool
 
+from newton_interval cimport get_interval, get_interval_from_guess
 
 cdef extern int poly_eval(int nt,
                           int order,
@@ -14,8 +15,6 @@ cdef extern int poly_eval(int nt,
                           int derivative
                       )
 
-cdef extern size_t get_interval(const double arr[], const size_t N, const double t)
-cdef extern size_t get_interval_from_guess(const double arr[], const size_t N, const double t, int i)
 cdef extern void poly_coeff1(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff3(const double t[], const double y[], double c[], const size_t nt)
 cdef extern void poly_coeff5(const double t[], const double y[], double c[], const size_t nt)
