@@ -3,7 +3,7 @@ cInterpol
 =============
 
 cInterpol_ is a small python extension for optimized interpolation of
-data series for which each time point has up to N-th order derivative.
+data series for which each data point one knows the up to N-th order derivative.
 
 It provides a c:a 5 orders of magnitude faster (albeit less general)
 version of `scipy.interpolate.PiecewisePolynomial` (on my dual core laptop I get speed-up of 160 000x). 

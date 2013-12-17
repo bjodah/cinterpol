@@ -105,9 +105,6 @@ class my_build_ext(build_ext.build_ext):
                 shutil.rmtree(tempd)
 
 
-cmdclass = {'build_ext': my_build_ext}
-
-
 from distutils.extension import Extension
 ext_modules = [
     Extension('cInterpol.core', ['cInterpol/core.c']),
@@ -116,7 +113,12 @@ ext_modules = [
 
 setup(
     name='cInterpol',
-    cmdclass = cmdclass,
-    ext_modules=[],#ext_modules,
+    version='0.2.1',
+    description='Python extension for optimized interpolation of data series for which each data point one knows the up to N-th order derivative.',
+    author='Björn Dahlgren',
+    author_email='bjodah@DELETEMEgmail.com',
+    url='https://github.com/bjodah/cinterpol',
     packages = ['cInterpol']
+    ext_modules=[],#ext_modules,
+    cmdclass = {'build_ext': my_build_ext},
 )
