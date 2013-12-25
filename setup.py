@@ -17,8 +17,52 @@ import shutil
 from distutils.core import setup
 from distutils.command import build_ext
 
-from pycompilation import pyx2obj, compile_sources, link_py_so, src2obj, get_mixed_fort_c_linker
-from pycompilation.util import render_mako_template_to, copy, MetaReaderWriter
+name_ = 'cInterpol'
+version_ = '0.2.1'
+
+if any([x in sys.argv for x in ('build', 'build_ext', 'install')]):
+    # e.g. egg_info must not import from dependencies (pycompilation)
+    from pycompilation.dist import clever_build_ext as build_ext
+    from pycompilation.dist import CleverExtension as Extension
+else:
+    from distutils.command import build_ext
+    from distutils.extension import Extension
+
+cmdclass_ = {'build_ext': build_ext}, 
+ext_modules_ = [
+    Extension(
+        "cInterpol.core",
+        sources=[
+            'cInterpol/poly_coeff_template.c'
+            'cInterpol/newton_interval/src/newton_interval.c',
+            'cInterpol/core.pyx',
+        ],
+        include_dirs=['cInterpol/newton_interval/include'])
+]
+
+
+ext_modules = [
+    Extension('cInterpol.core', ['cInterpol/core.c']),
+]
+
+
+setup(
+    name=name_,
+    version=version_,
+    author='Björn Dahlgren',
+    author_email='bjodah@DELETEMEgmail.com',
+    description='Python extension for optimized interpolation of data series for which each data point one knows the up to N-th order derivative.',
+    license = "BSD",
+    url='https://github.com/bjodah/'+name_.lower(),
+    download_url='https://github.com/bjodah/'+name_.lower()+'/archive/v'+version_+'.tar.gz',
+    packages = ['cInterpol']
+    ext_modules=[],#ext_modules,
+    cmdclass = {'build_ext': my_build_ext},
+)
+
+
+
+########################################
 
 
 cInterpol_dir = os.path.join(os.path.abspath(
@@ -56,6 +100,10 @@ def render_poly_coeff(tempd, maxord=5):
 def run_compilation(tempd, **kwargs):
     # Let's compile elemwise.c and wrap it using cython
     # source in elemwise_wrapper.pyx
+    from pycompilation import (pyx2obj, compile_sources, link_py_so,
+                               src2obj, get_mixed_fort_c_linker
+    from pycompilation.util import render_mako_template_to, copy, MetaReaderWriter
+
 
     poly_coeff_sources = render_poly_coeff(tempd)
 
@@ -75,6 +123,7 @@ def run_compilation(tempd, **kwargs):
         std='c99',
         cwd=tempd, run_linker=False, **kwargs)
 
+
     core_obj = pyx2obj('core.pyx', cwd=tempd,
                        include_numpy=True, gdb=True,
                        options=['warn', 'fast'],
@@ -88,37 +137,19 @@ def run_compilation(tempd, **kwargs):
 
 class my_build_ext(build_ext.build_ext):
     def run(self):
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger(__name__)
-        if not self.dry_run: # honor the --dry-run flag
-            tempd = os.path.join(
-                os.path.abspath(os.path.dirname(__file__)),
-                'build')
-            if not os.path.exists(tempd): os.mkdir(tempd)
-            #tempd = tempfile.mkdtemp()
-            so_path = run_compilation(
-                tempd, logger=logger, only_update=True,
-                inc_dirs=[os.path.join(cInterpol_dir,'newton_interval/include')]
-            )
-            copy(so_path, cInterpol_dir, only_update=True)
-            if not DEBUG:
-                shutil.rmtree(tempd)
+        # logging.basicConfig(level=logging.INFO)
+        # logger = logging.getLogger(__name__)
+        if self.dry_run: return # honor the --dry-run flag
+        tempd = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'build')
+        if not os.path.exists(tempd): os.mkdir(tempd)
+        #tempd = tempfile.mkdtemp()
+        so_path = run_compilation(
+            tempd, only_update=True,
+            inc_dirs=[os.path.join(cInterpol_dir,'newton_interval/include')]
+        )
+        copy(so_path, cInterpol_dir, only_update=True)
+        if not DEBUG:
+            shutil.rmtree(tempd)
 
-
-from distutils.extension import Extension
-ext_modules = [
-    Extension('cInterpol.core', ['cInterpol/core.c']),
-]
-
-
-setup(
-    name='cInterpol',
-    version='0.2.1',
-    description='Python extension for optimized interpolation of data series for which each data point one knows the up to N-th order derivative.',
-    author='Björn Dahlgren',
-    author_email='bjodah@DELETEMEgmail.com',
-    url='https://github.com/bjodah/cinterpol',
-    packages = ['cInterpol']
-    ext_modules=[],#ext_modules,
-    cmdclass = {'build_ext': my_build_ext},
-)
