@@ -47,7 +47,8 @@ void ${token}_eval_${wy}_${i}(const ${SIZE_T} nt,
 	}
 
 	// Calculate value of yout[oi] at tout[oi]
-	yout[oi] = ${token}_scarl_${wy}_${i}(tout[oi]-t[ti], c+oi*wy);
+	// for shifted coefficients.
+	yout[oi] = ${token}_scalar_${wy}_${i}(tout[oi]-t[ti], c+oi*${wy});
 	}
     }
 }

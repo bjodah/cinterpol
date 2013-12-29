@@ -20,27 +20,31 @@ from distutils.command import build_ext
 name_ = 'cInterpol'
 version_ = '0.2.1'
 
+pkg_dir = name_
+newton_interval_dir = os.path.join(name_, 'newton_interval')
 model_tokens = ['poly'] #, 'pade'] #, 'lincomb'
 
 
-if '--help'in sys.argv[1:] or sys.argv[1] in ('--help-commands', 'egg_info', 'clean', '--version'):
-    pass
+if '--help'in sys.argv[1:] or sys.argv[1] in (
+        '--help-commands', 'egg_info', 'clean', '--version'):
+    cmdclass_ = {}
+    ext_modules_ = []
 else:
     from pycompilation.dist import clever_build_ext
     from pycompilation.dist import CleverExtension as Extension
     from .cInterpol.model import models
     from .cInterpol.codeexport import ModelCode
     source_files = [
-        'cInterpol/newton_interval/src/newton_interval.c',
-        'cInterpol/piecewise_template.pyx'
+        os.path.join(newton_interval_dir, 'src', 'newton_interval.c'),
+        os.path.join(pkg_dir, 'piecewise_template.pyx'),
     ],
 
     for token in model_tokens:
         model_code = ModelCode(
             models[token], max_wy, max_derivative,
-            tempdir='cInterpol')
+            tempdir=pkg_dir)
         model_code.write_code()
-        print(model_code._written_files)
+        print(model_code._written_files) ## DEBUG
         source_files.extend(model_code.source_files)
 
     subsd =  {'tokens': model_tokens,
@@ -52,9 +56,9 @@ else:
     cmdclass_ = {'build_ext': clever_build_ext},
     ext_modules_ = [
         CleverExtension(
-            "cInterpol.piecewise",
+            name_+".piecewise",
             sources=source_files
-            include_dirs=['cInterpol/newton_interval/include'],
+            include_dirs=[os.path.join(newton_interval_dir, 'include')],
             template_regexps=[
                 (r'^(\w+)_template.(\w+)$', r'\1.\2', subsd),
             ],
@@ -71,11 +75,12 @@ setup(
     version=version_,
     author='Björn Dahlgren',
     author_email='bjodah@DELETEMEgmail.com',
-    description='Python extension for optimized interpolation of data series for which each data point has up to N-th order derivative.',
+    description="Python extension for optimized interpolation of "+\
+    "data series for which each data point has up to N-th order derivative.",
     license = "BSD",
     url='https://github.com/bjodah/'+name_.lower(),
     download_url='https://github.com/bjodah/'+name_.lower()+'/archive/v'+version_+'.tar.gz',
-    packages = ['cInterpol']
+    packages = [name_]
     ext_modules=ext_modules_,
     cmdclass = cmdclass_,
 )
