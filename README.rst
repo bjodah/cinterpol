@@ -2,7 +2,7 @@
 cInterpol
 =============
 
-cInterpol_ is a small python extension for optimized interpolation of
+cInterpol_ is a python extension for optimized interpolation of
 data series for which each data point one knows the up to N-th order derivative.
 
 It provides a c:a 5 orders of magnitude faster (albeit less general)
@@ -10,70 +10,56 @@ version of `scipy.interpolate.PiecewisePolynomial` (on my dual core laptop I get
 
 See examples/perf.py for a quick head-on benchmark between those two
 (expect a runtime on the order of half a minute).  The performance is
-achieved through the use of multithreaded (OpenMP) C
- (with some equations generated through Sympy) and Cython.
+achieved through the use of multithreaded (OpenMP) C routines (wrapped using Cython).
+
+The formulae for the coefficients are generated using Sympy, and can in theory be modified quite easily.
 
 Feel free to enhance modify and make pull request at `github`__ to
 
-.. _cinterpol: http://www.github.com/bjodah/cinterpol
+.. _cInterpol: http://www.github.com/bjodah/cinterpol
 
 __ cinterpol_
-
-Finite difference (inter/extra)polation of derivatives
-------------------------------------------------------
-Bengt Fornberg formulae implemented in Fortran 90.
 
 
 Installation
 ============
-To install run `python setup.py install`.
+Using pip:
+`pip install https://github.com/bjodah/cinterpol/archive/v0.2.1.git`
+Manual installation:
+1. Clone repository `git clone https://github.com/bjodah/cinterpol.git`
+2. Install dependencies `cd cinterpol; pip install -r requirements.txt`
+3. Install run `sudo python setup.py install` or `python setup.py install --user`.
+
 See distutils' documentation_ for more options.
-
 .. _documentation: http://docs.python.org/2/library/distutils.html
-
-Files
-=====
-core.pyx - The pythonic (cython) interface to the C routines
-newton_interval.c - Quadratic order look up see 
-poly_coeffX.c.mako
-poly_coeff_expr.py
 
 Tests
 =====
-TODO: make a proper test suite.
-For now the examples serves as tests together with
-the tests in symodesys/tests (read MANIFEST.txt therein)
-
+Run `py.test` if py.test is installed on your system.
+Elsewise: `cd cInterpol/tests/; make tests`
 
 Performance tests
 -----------------
-See examples/perf.py, as of SciPy 0.11 you should expect about 3
+See examples/perf.py, as of SciPy 0.11 you should expect about 5
 orders of magnitude speed-up.
 
 
 Dependencies
 ============
-Python_
-NumPy_
-Mako_   (optional)
-Cython_ 0.19 (optional)
-Sympy_  (optional)
-
+* Python_
+* NumPy_
+* Cython_ >= v0.19.1
+* Sympy_ 
+* pycompilation_ >= v0.2.1
 .. _Python: http://www.python.org
 .. _NumPy: http://www.numpy.org/
-.. _Mako: http://www.makotemplates.org/
 .. _Cython: http://www.cython.org/
 .. _Sympy: http://sympy.org/
-
-Bits and pieces with potential for usage outside cInterpol
-==============================================================
-newton_interval.c - Even though very simple it can be useful for quadratic
-convergence lookup in ordered (strictly monotone) and well behaved arrays.
+.. _pycompilation: https://www.github.com/bjodah/pycompilation
 
 TODO
 ====
 Add cubic splines
-Add finite difference (Fornberg)
 
 License
 =======

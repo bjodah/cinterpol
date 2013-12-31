@@ -6,8 +6,8 @@ class Relation(object):
 
     expr = None
     x = sympy.Symbol('x', real = True)
-    x0 = sympy.symbols('x0')
-    x1 = sympy.symbols('x1')
+    x0 = sympy.symbols('x0', real = True)
+    x1 = sympy.symbols('x1', real = True)
 
 
     def __init__(self, wy=None, c=None):

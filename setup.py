@@ -3,27 +3,23 @@
 
 """
 Custom setup script for cInterpol to generate sources and
-compile and link a mix of C and Fortran 2003 sources wrapped
-using Cython.
+compile and link a C routines (and their Cython wrappers).
 
 The setup requires pycompilation (www.github.com/bjodah/pycompilation)
 """
 
 # Python standard libaray imports
 import os
-import logging
-import tempfile
-import shutil
 from distutils.core import setup
-from distutils.command import build_ext
+
 
 name_ = 'cInterpol'
 version_ = '0.2.1'
 
+
 pkg_dir = name_
 newton_interval_dir = os.path.join(name_, 'newton_interval')
 model_tokens = ['poly'] #, 'pade'] #, 'lincomb'
-
 
 if '--help'in sys.argv[1:] or sys.argv[1] in (
         '--help-commands', 'egg_info', 'clean', '--version'):
