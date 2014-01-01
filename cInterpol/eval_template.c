@@ -11,13 +11,13 @@
 #define BREAKEVEN 100 // TODO: determine a typical value for this
 
 %for token in tokens:
-%for wy in range(max_wy):
-%for i in range(max_deriv[wy]+1)
+%for wy in range(1, max_wy+1):
+%for i in range(max_deriv[wy]+1):
 
-static double ${token}_scalar_${wy}_${i}(
+double ${token}_scalar_${wy}_${i}(
     const double t, const double * const restrict c)
 {
-% for cse_token, cse_def in eval_cse[token]:
+% for cse_token, cse_def in eval_cse[token][wy][i]:
     const double ${cse_token} = ${cse_def};
 % endfor
     return ${eval_expr[token][wy][i]};

@@ -2,38 +2,40 @@
 import numpy as np
 cimport numpy as cnp
 from cpython cimport bool
-from newton_interval cimport get_interval, get_interval_from_guess, check_nan
+from newton_interval cimport get_interval, get_interval_from_guess, check_nan, check_strict_monotonicity
 
 # Note: Cython >=0.19 support const properly.
 
 
 %for token in tokens:
-%for i in range(1,max_wy+1):
+%for wy in range(1,max_wy+1):
 
-cdef extern void ${token}_eval_${i}(int nt,
-                              int wy,
-                              double * t,
-                              double * c,
-                              int nout,
-                              double * tout,
-                              double * yout,
-                              int derivative
-                          )
+cdef extern void ${token}_coeff${wy}(const double * const t,
+                                     const double * const y,
+                                     double * const c,
+                                     const ${SIZE_T} nt)
 
-cdef extern int ${token}_scalar_${i}(double t,
-                                double * c,
-                                int derivative
-                          )
+%for i in range(max_deriv[wy]+1):
 
-cdef extern void ${token}_coeff_${i}(const double t[], const double y[], double c[], const size_t nt)
+cdef extern int ${token}_scalar_${i}(
+    const double t, const double * const c)
 
+cdef extern void ${token}_eval_${wy}_${i}(
+    const ${SIZE_T} nt,
+    const double * const t,
+    const double * const c,
+    const ${SIZE_T} nout,
+    const double * const tout,
+    double * const yout,
+)
+
+%endfor
 %endfor
 %endfor
 
 
 cdef bint _check_nan(double * arr, int n) nogil:
     return check_nan(arr, n) != -1
-
 
 cdef bint _check_strict_monotonicity(double * arr, int n) nogil:
     return check_strict_monotonicity(arr, n) == 1
@@ -100,7 +102,7 @@ cdef class Piecewise_${token}:
                 raise ValueError('Invlid wy: {}'.format(self.wy))
 %for i in range(1, max_wy+1):
             elif self.wy == ${i}:
-                ${token}_coeff_${i}(&t[0], &y[0,0], &c[0,0], len(t))
+                ${token}_coeff${i}(&t[0], &y[0,0], &c[0,0], len(t))
 %endfor
             self.t = t
             self.c = c
@@ -119,12 +121,11 @@ cdef class Piecewise_${token}:
     def __call__(self, t, int deriv = 0):
         # First 3 are used only in the case of t is float
         cdef double y
-        cdef size_t it
+        cdef ${SIZE_T} it
         cdef int j
         cdef cnp.ndarray[cnp.float64_t, ndim=1] yout
         cdef cnp.ndarray[cnp.float64_t, ndim=1] tout
 
-        assert deriv <= ${max_derivative}
         if isinstance(t, np.ndarray):
             tout = np.ascontiguousarray(t)
         else:
@@ -138,13 +139,18 @@ cdef class Piecewise_${token}:
 
         yout = np.empty_like(tout)
 
-        if self.wy < 1 or self.wy > max_wy:
+        if self.wy < 1 or self.wy > ${max_wy}:
             raise ValueError('Invlid wy: {}'.format(self.wy))
-        %for i in range(1, max_wy+1):
-        elif self.wy == ${i}:
-            ${token}_eval_${i}(
-                self.t.size, self.wy, &self.t[0],
-                &self.c[0,0], tout.size, &tout[0], &yout[0], deriv)
+        %for wy in range(1, max_wy+1):
+        elif self.wy == ${wy}:
+            if deriv < 0 or deriv > ${max_deriv[wy]}:
+                raise ValueError("Invalid derivative: {}".format(deriv))
+            %for i in range(max_deriv[wy]+1):
+            elif deriv == ${i}:
+                ${token}_eval_${wy}_${i}(
+                    self.t.size, self.wy, &self.t[0],
+                    &self.c[0,0], tout.size, &tout[0], &yout[0])
+            %endfor
         %endfor
 
         return yout

@@ -12,8 +12,9 @@ TAGS
 */*.so
 */build/
 build/
-cInterpol/core.c
-cInterpol/poly_coeff?.c
+cInterpol/piecewise_*.c
+cInterpol/coeff.*
+cInterpol/eval.*
 cInterpol/tests/__pycache__
 cInterpol/tests/test_newton_interval
 cInterpol/tests/test_poly_eval

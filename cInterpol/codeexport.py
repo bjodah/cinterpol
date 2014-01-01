@@ -25,8 +25,8 @@ def cache(cb): # super simple cache
 
 class ModelCode(C_Code):
 
-    source_files = ['coeff.c',
-                    'eval.c']
+    source_files = ['./cInterpol/coeff.c',
+                    './cInterpol/eval.c']
 
     templates = ['./cInterpol/coeff_template.c',
                  './cInterpol/coeff_template.h',
@@ -40,7 +40,7 @@ class ModelCode(C_Code):
         super(ModelCode, self).__init__(*args, **kwargs)
 
 
-    def variables_for_model_and_wy(self, Model, wy):
+    def variables_for_model_and_wy(self, Model, wy, max_deriv):
         # number of cofficients per peicewise segment
         wc = wy*2
 
@@ -52,8 +52,9 @@ class ModelCode(C_Code):
 
         # Expressions for evaluating function value (eval_template.c)
         # -----------------------------------------------------------
-        eval_cse, eval_expr = self.get_cse_code(
-            sympy.Eq(m.expr),
+        eval_cse, eval_expr = {}, {}
+        for i in range(max_deriv+1):
+            eval_cse[i], eval_expr[i] = self.get_cse_code(m.expr.diff(m.x, i))
             # dummy_groups=(
             #     #DummyGroup('y_dummy', m.y),
             #     #DummyGroup('coeff_dummies', m.c),
@@ -61,7 +62,7 @@ class ModelCode(C_Code):
             # arrayify_groups=(
             #     #ArrayifyGroup('y_dummy', 'yout'),),
             #     #ArrayifyGroup('coeff_dummies', 'c'),),
-        )
+            #)
 
         # Expressions for determinigs coefficients (coeff_template.c)
         # -----------------------------------------------------------
@@ -103,15 +104,22 @@ class ModelCode(C_Code):
     def variables(self):
         # Variables passed on to {coeff,eval}_template.{c,h} and piecewise_template.pyx
         d=defaultdict(lambda: defaultdict(dict)) # allows to assign d['a']['b']['c'] = 3
+        d['max_deriv'] = {wy: wy*2-1 for wy in range(1,self.max_wy+1)}
         for token, Model in zip(self.tokens, self.models):
             for wy in range(1, self.max_wy+1):
-                dd = self.variables_for_model_and_wy(Model, wy)
+                dd = self.variables_for_model_and_wy(Model, wy, d['max_deriv'][wy])
                 for k, v in dd.items():
                     d[k][token][wy] = v
 
-        d['max_deriv'] = {wy: wy*2-1 for wy in range(self.max_wy)}
+        for k1,v in d.items():
+            if k1 == 'max_deriv':
+                print("[{}] = {}".format(k1,v))
+                continue
+            for k2,vv in v.items():
+                for k3,vvv in vv.items():
+                    print("[{}][{}][{}] = {}".format(k1,k2,k3,vvv))
+
         d['max_wy'] = self.max_wy
         d['SIZE_T'] = SIZE_T
         d['tokens'] = self.tokens
-        print(d)
         return d

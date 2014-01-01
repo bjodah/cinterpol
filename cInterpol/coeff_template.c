@@ -7,7 +7,7 @@
 #include "coeff.h"
 
 %for token in tokens:
-%for wy in range(max_wy):
+%for wy in range(1,max_wy+1):
 #define WY ${wy}
 void ${token}_coeff${wy}(const double * const restrict t,
 			 const double * const restrict y,
@@ -18,17 +18,17 @@ void ${token}_coeff${wy}(const double * const restrict t,
     for (${SIZE_T} i=0; i < (nt-1); ++i){
 	const double dt = t[i+1]-t[i];
 
-    % for cse_token, cse_def in coeff_cse[token]:
+    % for cse_token, cse_def in coeff_cse[token][wy]:
 	const double ${cse_token} = ${cse_def};
     % endfor
 
-    % for j, expr in enumerate(coeff_expr[token]):
+    % for j, expr in enumerate(coeff_expr[token][wy]):
 	c[i*2*WY+${j}] = ${expr};
     % endfor
     }
     const int i = nt-1;
     const double dt = t[i]-t[i-1];
-% for j, expr in coeff_end_epxrs[token]:
+% for j, expr in enumerate(coeff_end_exprs[token][wy]):
     c[i*2*WY+${j}] = ${expr};
 % endfor
 }

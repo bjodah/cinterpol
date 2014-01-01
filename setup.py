@@ -30,13 +30,13 @@ if '--help'in sys.argv[1:] or sys.argv[1] in (
     ext_modules_ = []
 else:
     from pycompilation.dist import clever_build_ext
-    from pycompilation.dist import CleverExtension as Extension
+    from pycompilation.dist import CleverExtension
     from cInterpol.model import models
     from cInterpol.codeexport import ModelCode
     source_files = [
         os.path.join(newton_interval_dir, 'src', 'newton_interval.c'),
         os.path.join(pkg_dir, 'piecewise_template.pyx'),
-    ],
+    ]
 
     for token in model_tokens:
         model_code = ModelCode(
@@ -50,9 +50,9 @@ else:
               'max_wy': max_wy,
     }
 
-    subsd.update(code.variables)
+    subsd.update(model_code.variables())
 
-    cmdclass_ = {'build_ext': clever_build_ext},
+    cmdclass_ = {'build_ext': clever_build_ext}
     ext_modules_ = [
         CleverExtension(
             name_+".piecewise",
