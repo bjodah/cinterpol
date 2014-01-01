@@ -13,7 +13,15 @@ from pycompilation.util import render_mako_template_to
 from cInterpol.model import models
 
 
-SIZE_T = 'int' # Change to 'size_t' if needed. (read ENV VAR?)
+SIZE_T = 'int' # Change to 'size_t' if needed. (use os.environ.get?)
+
+def cache(cb): # super simple cache
+    res = {}
+    def wrapper(self):
+        if not self in res:
+            res[self] = cb(self)
+        return res[self]
+    return wrapper
 
 class ModelCode(C_Code):
 
@@ -25,14 +33,14 @@ class ModelCode(C_Code):
                  './cInterpol/eval_template.c',
                  './cInterpol/eval_template.h',]
 
-    def __init__(self, Model, max_wy, max_deriv, *args, **kwargs):
+    def __init__(self, tokens, models, max_wy, *args, **kwargs):
+        self.tokens = tokens
+        self.models = models
         self.max_wy = max_wy
-        self.max_deriv = max_deriv
-        self.Model = Model
         super(ModelCode, self).__init__(*args, **kwargs)
 
 
-    def variables_for_wy(self, wy):
+    def variables_for_model_and_wy(self, Model, wy):
         # number of cofficients per peicewise segment
         wc = wy*2
 
@@ -40,7 +48,7 @@ class ModelCode(C_Code):
         y0 = [sympy.Symbol('y0_' + str(i)) for i in range(wy)]
         y1 = [sympy.Symbol('y1_' + str(i)) for i in range(wy)]
 
-        m = self.Model(wy)
+        m = Model(wy)
 
         # Expressions for evaluating function value (eval_template.c)
         # -----------------------------------------------------------
@@ -63,20 +71,20 @@ class ModelCode(C_Code):
             eqs.append(m.diff(i).subs({m.x: m.x0}) - y0[i])
             # x=x1
             eqs.append(m.diff(i).subs({m.x: m.x1}) - y1[i])
+
         sol = sympy.solve(eqs, *m.c)
 
         coeff_cse, coeff_expr = self.get_cse_code(
             sol,
-            sympy.Eq(m.expr),
+            m.expr,
             dummy_groups=(
                 DummyGroup('x_dummy', [m.x]),
-                DummyGroup('y_dummy', [m.y]),
             ),
             arrayify_groups=( # see coeff_template.c
                 ArrayifyGroup('x_dummy', 'dt'),
-                ArrayifyGroup('y_dummy', 'y', 'i*WY'),),
-            )
+            ),
         )
+
 
         coeff_end_exprs = []
         for ci in m.c:
@@ -84,21 +92,26 @@ class ModelCode(C_Code):
             coeff_end_exprs.append(code)
 
         return{
-            'max_wy': self.max_wy,
-            'max_deriv': self.max_deriv,
-            'eval_scalar_expr': None,
-            'eval_deriv_exprs': None,
+            'eval_cse': eval_cse,
+            'eval_expr': eval_expr,
             'coeff_cse': coeff_cse,
-            'coeff_exprs_in_cse': None,
-            'coeff_end_exprs': None,
+            'coeff_expr': coeff_expr,
+            'coeff_end_exprs': coeff_end_exprs,
         }
 
+    @cache
     def variables(self):
-        dd = defaultdict(dict)
-        for wy in range(1, self.max_wy+1):
-            d = self.variables_for_wy(wy)
-            for k,v in d.items():
-                dd[k][wy] = v
+        # Variables passed on to {coeff,eval}_template.{c,h} and piecewise_template.pyx
+        d=defaultdict(lambda: defaultdict(dict)) # allows to assign d['a']['b']['c'] = 3
+        for token, Model in zip(self.tokens, self.models):
+            for wy in range(1, self.max_wy+1):
+                dd = self.variables_for_model_and_wy(Model, wy)
+                for k, v in dd.items():
+                    d[k][token][wy] = v
 
-        dd.update({'SIZE_T': SIZE_T})
-        return dd
+        d['max_deriv'] = {wy: wy*2-1 for wy in range(self.max_wy)}
+        d['max_wy'] = self.max_wy
+        d['SIZE_T'] = SIZE_T
+        d['tokens'] = self.tokens
+        print(d)
+        return d

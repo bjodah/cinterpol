@@ -8,31 +8,34 @@
 #include "newton_interval.h"
 #include "eval.h"
 
+#define BREAKEVEN 100 // TODO: determine a typical value for this
+
 %for token in tokens:
 %for wy in range(max_wy):
-%for i in range(max_deriv+1)
+%for i in range(max_deriv[wy]+1)
 
 static double ${token}_scalar_${wy}_${i}(
-    const double t, const double const * c)
+    const double t, const double * const restrict c)
 {
-% for cse_token, cse_def in coeff_cses[token]:
-    double ${cse_token} = ${cse_def};
+% for cse_token, cse_def in eval_cse[token]:
+    const double ${cse_token} = ${cse_def};
 % endfor
-    return ${eval_scalar_expr[token][wy][i]};
+    return ${eval_expr[token][wy][i]};
 }
 
-void ${token}_eval_${wy}_${i}(const ${SIZE_T} nt,
-			 const double * const restrict t,
-			 const double * const restrict c,
-			 const ${SIZE_T} nout,
-			 const double * const restrict tout, 
-			 double * const restrict yout,
-			 ){
+void ${token}_eval_${wy}_${i}(
+    const ${SIZE_T} nt,
+    const double * const restrict t,
+    const double * const restrict c,
+    const ${SIZE_T} nout,
+    const double * const restrict tout, 
+    double * const restrict yout,
+    ){
     // derivative = 0 evaluates function value, 1 evaluates first
     // derivative and so on..
     ${SIZE_T} ti = nt; // max: nt-1, nt considered "uninitialized"
 
-#pragma omp parallel for firstprivate(ti) schedule(static)
+#pragma omp parallel for firstprivate(ti) schedule(static) if (nout > BREAKEVEN)
     for (${SIZE_T} oi=0; oi<nout; ++oi){
 	// Set ti
 	if (ti == nt){ // ti == nt considered uninitialized!

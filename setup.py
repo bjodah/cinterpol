@@ -10,8 +10,8 @@ The setup requires pycompilation (www.github.com/bjodah/pycompilation)
 
 # Python standard libaray imports
 import os
+import sys
 from distutils.core import setup
-
 
 name_ = 'cInterpol'
 version_ = '0.2.1'
@@ -19,6 +19,9 @@ version_ = '0.2.1'
 
 pkg_dir = name_
 newton_interval_dir = os.path.join(name_, 'newton_interval')
+
+# What code to generate...
+max_wy = 3
 model_tokens = ['poly'] #, 'pade'] #, 'lincomb'
 
 if '--help'in sys.argv[1:] or sys.argv[1] in (
@@ -28,8 +31,8 @@ if '--help'in sys.argv[1:] or sys.argv[1] in (
 else:
     from pycompilation.dist import clever_build_ext
     from pycompilation.dist import CleverExtension as Extension
-    from .cInterpol.model import models
-    from .cInterpol.codeexport import ModelCode
+    from cInterpol.model import models
+    from cInterpol.codeexport import ModelCode
     source_files = [
         os.path.join(newton_interval_dir, 'src', 'newton_interval.c'),
         os.path.join(pkg_dir, 'piecewise_template.pyx'),
@@ -37,15 +40,15 @@ else:
 
     for token in model_tokens:
         model_code = ModelCode(
-            models[token], max_wy, max_derivative,
-            tempdir=pkg_dir)
+            model_tokens, [models[tok] for tok in model_tokens],
+            max_wy, tempdir=pkg_dir)
         model_code.write_code()
         print(model_code._written_files) ## DEBUG
         source_files.extend(model_code.source_files)
 
     subsd =  {'tokens': model_tokens,
               'max_wy': max_wy,
-              'max_derivative': max_derivative}
+    }
 
     subsd.update(code.variables)
 
@@ -53,7 +56,7 @@ else:
     ext_modules_ = [
         CleverExtension(
             name_+".piecewise",
-            sources=source_files
+            sources=source_files,
             include_dirs=[os.path.join(newton_interval_dir, 'include')],
             template_regexps=[
                 (r'^(\w+)_template.(\w+)$', r'\1.\2', subsd),
@@ -76,7 +79,7 @@ setup(
     license = "BSD",
     url='https://github.com/bjodah/'+name_.lower(),
     download_url='https://github.com/bjodah/'+name_.lower()+'/archive/v'+version_+'.tar.gz',
-    packages = [name_]
+    packages = [name_],
     ext_modules=ext_modules_,
     cmdclass = cmdclass_,
 )
