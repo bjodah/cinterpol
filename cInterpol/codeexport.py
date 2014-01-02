@@ -55,14 +55,14 @@ class ModelCode(C_Code):
         eval_cse, eval_expr = {}, {}
         for i in range(max_deriv+1):
             eval_cse[i], eval_expr[i] = self.get_cse_code(m.expr.diff(m.x, i))
-            # dummy_groups=(
-            #     #DummyGroup('y_dummy', m.y),
-            #     #DummyGroup('coeff_dummies', m.c),
-            # ),
-            # arrayify_groups=(
-            #     #ArrayifyGroup('y_dummy', 'yout'),),
-            #     #ArrayifyGroup('coeff_dummies', 'c'),),
-            #)
+            dummy_groups=(
+                DummyGroup('coeffdummies', m.c),
+                #DummyGroup('y_dummy', m.y),
+            ),
+            arrayify_groups=(
+                ArrayifyGroup('coeffdummies', 'c'),
+                #ArrayifyGroup('y_dummy', 'yout'),
+            )
 
         # Expressions for determinigs coefficients (coeff_template.c)
         # -----------------------------------------------------------

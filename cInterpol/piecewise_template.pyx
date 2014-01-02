@@ -148,8 +148,8 @@ cdef class Piecewise_${token}:
             %for i in range(max_deriv[wy]+1):
             elif deriv == ${i}:
                 ${token}_eval_${wy}_${i}(
-                    self.t.size, self.wy, &self.t[0],
-                    &self.c[0,0], tout.size, &tout[0], &yout[0])
+                    self.t.size, &self.t[0], &self.c[0,0],
+                    tout.size, &tout[0], &yout[0])
             %endfor
         %endfor
 

@@ -33,8 +33,9 @@ else:
     from pycompilation.dist import CleverExtension
     from cInterpol.model import models
     from cInterpol.codeexport import ModelCode
+    newton_interval_c_src = os.path.join(newton_interval_dir, 'src', 'newton_interval.c')
     source_files = [
-        os.path.join(newton_interval_dir, 'src', 'newton_interval.c'),
+        newton_interval_c_src,
         os.path.join(pkg_dir, 'piecewise_template.pyx'),
     ]
 
@@ -61,10 +62,13 @@ else:
             template_regexps=[
                 (r'^(\w+)_template.(\w+)$', r'\1.\2', subsd),
             ],
-            options_per_file={
-                'eval.c': ['pic', 'warn', 'fast', 'openmp'],
-                'coeff.c': ['pic', 'warn', 'fast', 'openmp'],
-                }
+            pycompilation_compile_kwargs={
+                'per_file_kwargs': {
+                    newton_interval_c_src: {'std': 'c99'},
+                    './cInterpol/eval.c': {'std': 'c99'},
+                    './cInterpol/coeff.c': {'std': 'c99'},
+                },
+            }
         )
     ]
 

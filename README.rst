@@ -61,6 +61,13 @@ TODO
 ====
 Add cubic splines
 
+Notes
+=====
+There is a git subtree under cInterpol, update though:
+`git subtree --prefix cInterpol/newton_interval pull newton_interval master`
+where the repo "newton_interval" is https://github.com/bjodah/newton_interval.git
+
+
 License
 =======
 Open Soucrce. Released under the very permissive "simplified
