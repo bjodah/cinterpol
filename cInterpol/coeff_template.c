@@ -4,7 +4,6 @@
 %if SIZE_T == 'size_t':
 #include <stdlib.h> /* size_t */
 %endif
-#include "coeff.h"
 
 // solve shifted first order coeff
 // token_coeff[wy]

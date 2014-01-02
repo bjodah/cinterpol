@@ -65,9 +65,19 @@ else:
             pycompilation_compile_kwargs={
                 'per_file_kwargs': {
                     newton_interval_c_src: {'std': 'c99'},
-                    './cInterpol/eval.c': {'std': 'c99'},
-                    './cInterpol/coeff.c': {'std': 'c99'},
+                    './cInterpol/eval.c': {
+                        'std': 'c99',
+                        'options': ['pic', 'warn', 'fast', 'openmp']
+                    },
+                    './cInterpol/coeff.c': {
+                        'std': 'c99',
+                        'options': ['pic', 'warn', 'fast', 'openmp']
+                    },
                 },
+            },
+            pycompilation_link_kwargs={
+                'options': ['openmp']
+                'libs': ['m']
             }
         )
     ]

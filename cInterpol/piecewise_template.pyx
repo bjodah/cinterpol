@@ -98,7 +98,7 @@ cdef class Piecewise_${token}:
 
             self.allow_extrapol = allow_extrapol
             self.wy = y.shape[1]
-            if self.wy < 1 or self.wy > max_wy:
+            if self.wy < 1 or self.wy > ${max_wy}:
                 raise ValueError('Invlid wy: {}'.format(self.wy))
 %for i in range(1, max_wy+1):
             elif self.wy == ${i}:
@@ -132,8 +132,17 @@ cdef class Piecewise_${token}:
             if isinstance(t, float):
                 y = 0.0
                 it = _get_index(self.t, t, True)
-                y = ${token}_scalar(t - self.t[it], &self.c[it, 0],
-                                    deriv)
+                if self.wy < 1 or self.wy > ${max_wy}:
+                    raise ValueError('Invlid wy: {}'.format(self.wy))
+            %for wy in range(1, max_wy+1):
+                elif self.wy == ${wy}:
+                    if deriv < 0 or deriv > ${max_deriv[wy]}:
+                        raise ValueError("Invalid derivative: {}".format(deriv))
+                %for i in range(max_deriv[wy]+1):
+                    elif deriv == ${i}:
+                        y = ${token}_scalar_${i}(t - self.t[it], &self.c[it, 0])
+                %endfor
+            %endfor
                 return np.array(y, dtype = np.float64)
             tout = np.array(t, dtype=np.float64)
 

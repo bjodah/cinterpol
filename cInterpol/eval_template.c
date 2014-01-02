@@ -6,7 +6,6 @@
 #include <stdlib.h> /* size_t */
 %endif
 #include "newton_interval.h"
-#include "eval.h"
 
 #define BREAKEVEN 100 // TODO: determine a typical value for this
 
