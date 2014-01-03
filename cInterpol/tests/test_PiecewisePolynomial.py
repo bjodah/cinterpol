@@ -9,7 +9,7 @@ import numpy as np
 from pycompilation.util import term_fmt
 
 from cInterpol import PiecewisePolynomial
-from cInterpol.util import Polynomial
+from cInterpol.model import Polynomial
 
 t1 = np.array([0.0, 1.0])
 y1 = np.array([[0.0, 0.0, 0.0],
@@ -66,13 +66,12 @@ def test_PiecewisePolynomial_call():
     assert pwpi(0.5) == 0.5
     assert pwpi(1.5) == 1.5
 
-    Dpwpi = pwpi.derivative(1)
-    assert Dpwpi(-1.5) == 1.0
-    assert Dpwpi(-1.0) == 1.0
-    assert Dpwpi(0.0) == 1.0
-    assert Dpwpi(0.5) == 1.0
-    assert Dpwpi(1.0) == 1.0
-    assert Dpwpi(1.5) == 1.0
+    assert pwpi(-1.5, deriv=1) == 1.0
+    assert pwpi(-1.0, deriv=1) == 1.0
+    assert pwpi( 0.0, deriv=1) == 1.0
+    assert pwpi( 0.5, deriv=1) == 1.0
+    assert pwpi( 1.0, deriv=1) == 1.0
+    assert pwpi( 1.5, deriv=1) == 1.0
 
 
 if __name__ == '__main__':

@@ -17,8 +17,8 @@ cdef extern void ${token}_coeff${wy}(const double * const t,
 
 %for i in range(max_deriv[wy]+1):
 
-cdef extern int ${token}_scalar_${wy}_${i}(
-    const double t, const double * const c) nogil
+cdef extern double ${token}_scalar_${wy}_${i}(
+    const double t, const double * const c, const ${SIZE_T} offset) nogil
 
 cdef extern void ${token}_eval_${wy}_${i}(
     const ${SIZE_T} nt,
@@ -111,8 +111,7 @@ cdef class Piecewise_${token}:
         if check_for_nan:
             if has_nan(&self.t[0], len(self.t)):
                 raise ValueError('NaN encountered!')
-            if has_nan(
-                    &self.c[0,0], self.c.shape[0]*self.c.shape[1]):
+            if has_nan(&self.c[0,0], self.c.shape[0]*self.c.shape[1]):
                 raise ValueError('NaN encountered!')
         if ensure_strict_monotonicity:
             if not obeys_strict_monotonicity(&self.t[0], len(self.t)):
@@ -130,8 +129,8 @@ cdef class Piecewise_${token}:
         if isinstance(t, np.ndarray):
             tout = np.ascontiguousarray(t)
         else:
+            if isinstance(t, int): t = float(t)
             if isinstance(t, float):
-                y = 0.0
                 it = _get_index(self.t, t, True)
                 if self.wy < 1 or self.wy > ${max_wy}:
                     raise ValueError('Invlid wy: {}'.format(self.wy))
@@ -142,8 +141,15 @@ cdef class Piecewise_${token}:
                             "Invalid derivative: {}".format(deriv))
                   %for i in range(max_deriv[wy]+1):
                     elif deriv == ${i}:
+                        print('t=',t)
+                        print('it=',it)
+                        print('self.t[it]=',self.t[it])
+                        print('${token}_scalar_${wy}_${i}')
+                        print('c[0,0]=',self.c[0,0])
+                        print('it*${wy}*2=',it*${wy}*2)
                         y = ${token}_scalar_${wy}_${i}(
-                            t - self.t[it], &self.c[it, 0])
+                            t - self.t[it], &self.c[0, 0], it*${wy}*2)
+                        print('y=',y)
                   %endfor
               %endfor
                 return np.array(y, dtype = np.float64)

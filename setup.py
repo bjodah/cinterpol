@@ -79,7 +79,7 @@ else:
                 'options': ['openmp'],
                 #'libs': ['m']
             },
-            copy_files= ['./cInterpol/pow.c'],
+            copy_files= ['./cInterpol/power.c'],
         )
     ]
 
@@ -98,19 +98,3 @@ setup(
     ext_modules=ext_modules_,
     cmdclass = cmdclass_,
 )
-
-
-    # poly_coeff_objs = compile_sources(
-    #     poly_coeff_sources+['newton_interval.c']+['poly_eval.c'],
-    #     options=['warn', 'pic', 'fast', 'openmp'],
-    #     std='c99',
-    #     cwd=tempd, run_linker=False, **kwargs)
-
-    # core_obj = pyx2obj('core.pyx', cwd=tempd,
-    #                    include_numpy=True, gdb=True,
-    #                    options=['warn', 'fast'],
-    #                    flags=['-g'], **kwargs)
-
-    # so_path = link_py_so(
-    #     poly_coeff_objs+[core_obj], cwd=tempd,
-    #     options=['warn', 'pic', 'fast', 'openmp'], **kwargs)

@@ -10,7 +10,7 @@
 
 
 
-static double pow(const double num, const int exp) {
+static double power(const double num, const int exp) {
     // should be fast! (watch out for underflow/overflow)
     if (exp < 0) return 1.0/pow(num, -exp);
     double result;

@@ -39,7 +39,7 @@ def plot(pp, deriv=0, t0=None, tend=None, Nfine=4000, analytic_cb=np.sin,
     tend = tend or pp.t[-1]
     xfine = np.linspace(t0, tend, Nfine)
     plt.subplot(plot_rows, plot_cols, plot_idx)
-    plt.plot(pp.t, pp.c[:,0], '*', label = 'Function evaluated points')
+    if deriv==0: plt.plot(pp.t, pp.c[:,0], '*', label = 'Function evaluated points')
     plt.plot(xfine, pp(xfine, deriv=deriv), label='Interpolated')
     plt.plot(xfine, analytic_cb(xfine), label ='Analytic')
     plt.legend()

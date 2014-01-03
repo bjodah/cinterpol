@@ -36,6 +36,9 @@ class Relation(object):
     def expr(self):
         pass
 
+    def eval(self, x, c):
+        return self.expr.subs({self.x: x}).subs(dict(zip(self.c, c)))
+
 
 class Polynomial(Relation):
     """

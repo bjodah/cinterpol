@@ -60,11 +60,9 @@ class ModelCode(C_Code):
                 m.expr.diff(m.x, i),
                 dummy_groups=(
                     DummyGroup('coeffdummies', m.c),
-                    #DummyGroup('y_dummy', m.y),
                 ),
                 arrayify_groups=(
-                    ArrayifyGroup('coeffdummies', 'c'),
-                    #ArrayifyGroup('y_dummy', 'yout'),
+                    ArrayifyGroup('coeffdummies', 'c', 'offset'), # see eval_template.c
                 )
             )
 

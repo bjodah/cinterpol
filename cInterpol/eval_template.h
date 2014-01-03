@@ -5,7 +5,7 @@
 %for token in tokens:
 %for wy in range(1, max_wy+1):
 %for i in range(max_deriv[wy]+1):
-void ${token}_scalar_${wy}_${i}(const double, const double * const restrict)
+void ${token}_scalar_${wy}_${i}(const double, const double * const restrict, const ${SIZE_T})
 
 void ${token}_eval_${wy}_${i}(
     const ${SIZE_T},
