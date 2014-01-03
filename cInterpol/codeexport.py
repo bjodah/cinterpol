@@ -45,8 +45,10 @@ class ModelCode(C_Code):
         wc = wy*2
 
         # Sympy variable symbols for formulating code
-        y0 = [sympy.Symbol('y0_' + str(i)) for i in range(wy)]
-        y1 = [sympy.Symbol('y1_' + str(i)) for i in range(wy)]
+        y0 = [sympy.Symbol('y0_' + str(i), real=True) for i \
+              in range(wy)]
+        y1 = [sympy.Symbol('y1_' + str(i), real=True) for i \
+              in range(wy)]
 
         m = Model(wy)
 
@@ -54,14 +56,16 @@ class ModelCode(C_Code):
         # -----------------------------------------------------------
         eval_cse, eval_expr = {}, {}
         for i in range(max_deriv+1):
-            eval_cse[i], eval_expr[i] = self.get_cse_code(m.expr.diff(m.x, i))
-            dummy_groups=(
-                DummyGroup('coeffdummies', m.c),
-                #DummyGroup('y_dummy', m.y),
-            ),
-            arrayify_groups=(
-                ArrayifyGroup('coeffdummies', 'c'),
-                #ArrayifyGroup('y_dummy', 'yout'),
+            eval_cse[i], eval_expr[i] = self.get_cse_code(
+                m.expr.diff(m.x, i),
+                dummy_groups=(
+                    DummyGroup('coeffdummies', m.c),
+                    #DummyGroup('y_dummy', m.y),
+                ),
+                arrayify_groups=(
+                    ArrayifyGroup('coeffdummies', 'c'),
+                    #ArrayifyGroup('y_dummy', 'yout'),
+                )
             )
 
         # Expressions for determinigs coefficients (coeff_template.c)
@@ -74,22 +78,33 @@ class ModelCode(C_Code):
             eqs.append(m.diff(i).subs({m.x: m.x1}) - y1[i])
 
         sol = sympy.solve(eqs, *m.c)
-
+        print(sol)
         coeff_cse, coeff_expr = self.get_cse_code(
-            sol,
-            m.expr,
+            [sol[x] for x in m.c],
             dummy_groups=(
-                DummyGroup('x_dummy', [m.x]),
+                DummyGroup('y0dummy', y0),
+                DummyGroup('y1dummy', y1),
             ),
             arrayify_groups=( # see coeff_template.c
-                ArrayifyGroup('x_dummy', 'dt'),
+                ArrayifyGroup('y0dummy', 'y', 'i*WY'),
+                ArrayifyGroup('y1dummy', 'y', '(i+1)*WY'),
             ),
         )
 
 
         coeff_end_exprs = []
         for ci in m.c:
-            code = self.as_arrayified_code(sol[ci])
+            code = self.as_arrayified_code(
+                sol[ci],
+                dummy_groups=(
+                    DummyGroup('y0dummy', y0),
+                    DummyGroup('y1dummy', y1),
+                ),
+                arrayify_groups=( # see coeff_template.c
+                    ArrayifyGroup('y0dummy', 'y', 'i*WY'),
+                    ArrayifyGroup('y1dummy', 'y', '(i+1)*WY'),
+                ),
+            )
             coeff_end_exprs.append(code)
 
         return{

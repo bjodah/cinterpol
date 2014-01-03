@@ -76,9 +76,10 @@ else:
                 },
             },
             pycompilation_link_kwargs={
-                'options': ['openmp']
-                'libs': ['m']
-            }
+                'options': ['openmp'],
+                #'libs': ['m']
+            },
+            copy_files= ['./cInterpol/pow.c'],
         )
     ]
 
