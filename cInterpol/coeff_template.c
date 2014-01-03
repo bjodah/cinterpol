@@ -14,25 +14,25 @@
 %for token in tokens:
 %for wy in range(1,max_wy+1):
 #define WY ${wy}
-void ${token}_coeff${wy}(const double * const restrict t,
+void ${token}_coeff${wy}(const double * const restrict x,
 			 const double * const restrict y,
 			 double * const restrict c, 
-			 const ${SIZE_T} nt){
+			 const ${SIZE_T} nx){
 #pragma omp parallel for
-    for (${SIZE_T} i=0; i < (nt-1); ++i){
-	const double x1 = t[i+1]-t[i];
-    % for cse_token, cse_def in coeff_cse[token][wy]:
+    for (${SIZE_T} i=0; i < (nx-1); ++i){
+	const double x1 = x[i+1]-x[i];
+      % for cse_token, cse_def in coeff_cse[token][wy]:
 	const double ${cse_token} = ${cse_def};
-    % endfor
-    % for j, expr in enumerate(coeff_expr[token][wy]):
+      % endfor
+      % for j, expr in enumerate(coeff_expr[token][wy]):
 	c[i*2*WY+${j}] = ${expr};
-    % endfor
+      % endfor
     }
-    const int i = nt-1;
-    const double x1 = t[i]-t[i-1];
-% for j, expr in enumerate(coeff_end_exprs[token][wy]):
+    const int i = nx-1;
+    const double x1 = x[i]-x[i-1];
+  % for j, expr in enumerate(coeff_end_exprs[token][wy]):
     c[i*2*WY+${j}] = ${expr};
-% endfor
+  % endfor
 }
 #undef WY
 %endfor

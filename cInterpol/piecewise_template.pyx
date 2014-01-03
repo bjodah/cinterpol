@@ -141,15 +141,8 @@ cdef class Piecewise_${token}:
                             "Invalid derivative: {}".format(deriv))
                   %for i in range(max_deriv[wy]+1):
                     elif deriv == ${i}:
-                        print('t=',t)
-                        print('it=',it)
-                        print('self.t[it]=',self.t[it])
-                        print('${token}_scalar_${wy}_${i}')
-                        print('c[0,0]=',self.c[0,0])
-                        print('it*${wy}*2=',it*${wy}*2)
                         y = ${token}_scalar_${wy}_${i}(
                             t - self.t[it], &self.c[0, 0], it*${wy}*2)
-                        print('y=',y)
                   %endfor
               %endfor
                 return np.array(y, dtype = np.float64)

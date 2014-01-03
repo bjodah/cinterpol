@@ -27,14 +27,14 @@ def bench(start=0, stop=20, N=1e6):
 
     # No check_nan
     cInterpol_no_check_nan_start = time.time()
-    cpp = cPiecewisePolynomial(x, all_y, check_nan=False)
+    cpp = cPiecewisePolynomial(x, all_y, check_for_nan=False)
     cInterpol_no_check_nan_res=cpp(xfine)
     cInterpol_no_check_nan_stop = time.time()
 
     # No check_nan_monotone
     cInterpol_no_check_nan_monotone_start = time.time()
-    cpp = cPiecewisePolynomial(x, all_y, check_nan=False,
-                               check_strict_monotonicity=False)
+    cpp = cPiecewisePolynomial(x, all_y, check_for_nan=False,
+                               ensure_strict_monotonicity=False)
     cInterpol_no_check_nan_monotone_res=cpp(xfine)
     cInterpol_no_check_nan_monotone_stop = time.time()
 

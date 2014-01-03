@@ -90,17 +90,25 @@ class ModelCode(C_Code):
         )
 
 
+        end_eqs = []
+        for i in range(wy):
+            # x=x0
+            end_eqs.append(m.diff(i).subs({m.x: -m.x1}) - y0[i]) # note -m.x1
+            # x=x1
+            end_eqs.append(m.diff(i).subs({m.x:  m.x0}) - y1[i]) # note  m.x0
+
+        end_sol = sympy.solve(end_eqs, *m.c)
         coeff_end_exprs = []
         for ci in m.c:
             code = self.as_arrayified_code(
-                sol[ci],
+                end_sol[ci],
                 dummy_groups=(
                     DummyGroup('y0dummy', y0),
                     DummyGroup('y1dummy', y1),
                 ),
                 arrayify_groups=( # see coeff_template.c
-                    ArrayifyGroup('y0dummy', 'y', 'i*WY'),
-                    ArrayifyGroup('y1dummy', 'y', '(i+1)*WY'),
+                    ArrayifyGroup('y0dummy', 'y', '(i-1)*WY'),
+                    ArrayifyGroup('y1dummy', 'y', '(i)*WY'),
                 ),
             )
             coeff_end_exprs.append(code)

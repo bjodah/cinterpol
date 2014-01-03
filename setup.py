@@ -14,7 +14,7 @@ import sys
 from distutils.core import setup
 
 name_ = 'cInterpol'
-version_ = '0.2.1'
+version_ = '0.3'
 
 
 pkg_dir = name_
