@@ -50,7 +50,7 @@ Dependencies
 * NumPy_
 * Cython_ >= v0.19.1
 * Sympy_ 
-* pycompilation_ >= v0.2.1
+* pycompilation_ >= v0.2.2
 .. _Python: http://www.python.org
 .. _NumPy: http://www.numpy.org/
 .. _Cython: http://www.cython.org/
