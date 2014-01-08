@@ -5,8 +5,8 @@ cInterpol
 cInterpol_ is a python extension for optimized interpolation of
 data series for which each data point one knows the up to N-th order derivative.
 
-It provides a c:a 5 orders of magnitude faster (albeit less general)
-version of `scipy.interpolate.PiecewisePolynomial` (on my dual core laptop I get speed-up of 160 000x). 
+It provides a close to 6 orders of magnitude faster (albeit less general)
+version of `scipy.interpolate.PiecewisePolynomial` (my Core i7-3770K give ~800 000x speed-up). 
 
 See examples/perf.py for a quick head-on benchmark between those two
 (expect a runtime on the order of half a minute).  The performance is
@@ -24,7 +24,7 @@ __ cinterpol_
 Installation
 ============
 Using pip:
-`pip install https://github.com/bjodah/cinterpol/archive/v0.2.1.git`
+`pip install https://github.com/bjodah/cinterpol/archive/v0.2.2.tar.gz`
 Manual installation:
 1. Clone repository `git clone https://github.com/bjodah/cinterpol.git`
 2. Install dependencies `cd cinterpol; pip install -r requirements.txt`

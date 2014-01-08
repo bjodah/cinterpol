@@ -21,7 +21,7 @@ cInterpol/tests/test_poly_eval
 cInterpol/tests/test_fornberg
 cInterpol/tests/*.mod
 cInterpol/tests/*.pyc
-examples/sine_pp.pkl
+examples/*pp.pkl
 examples/*.pyc
 cInterpol/.meta_poly_coeff
 cInterpol/prebuilt/

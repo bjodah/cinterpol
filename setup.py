@@ -45,7 +45,7 @@ else:
             max_wy, tempdir=pkg_dir)
         model_code.write_code()
         print(model_code._written_files) ## DEBUG
-        source_files.extend(model_code.source_files)
+        source_files = model_code.source_files + source_files
 
     subsd =  {'tokens': model_tokens,
               'max_wy': max_wy,
