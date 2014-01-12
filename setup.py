@@ -16,23 +16,22 @@ from distutils.core import setup
 name_ = 'cInterpol'
 version_ = '0.3'
 
-
-pkg_dir = name_
-newton_interval_dir = os.path.join(name_, 'newton_interval')
-
-# What code to generate...
-max_wy = 3
-model_tokens = ['poly'] #, 'pade'] #, 'lincomb'
-
 if '--help'in sys.argv[1:] or sys.argv[1] in (
         '--help-commands', 'egg_info', 'clean', '--version'):
     cmdclass_ = {}
     ext_modules_ = []
 else:
-    from pycompilation.dist import clever_build_ext
-    from pycompilation.dist import CleverExtension
+    from pycompilation.dist import clever_build_ext, CleverExtension
     from cInterpol.model import models
     from cInterpol.codeexport import ModelCode
+
+    pkg_dir = name_
+    newton_interval_dir = os.path.join(name_, 'newton_interval')
+
+    # What code to generate...
+    max_wy = 3
+    model_tokens = ['poly'] #, 'pade'] #, 'lincomb'
+
     newton_interval_c_src = os.path.join(newton_interval_dir, 'src', 'newton_interval.c')
     source_files = [
         newton_interval_c_src,
