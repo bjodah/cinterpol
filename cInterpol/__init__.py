@@ -1,4 +1,5 @@
-__version__ = '0.3.1'
+# -*- coding: utf-8 -*-
+__version__ = '0.3.2'
 
 try:
     # Same naming convention as scipy.interpolate.
