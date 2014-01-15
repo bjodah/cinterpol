@@ -59,7 +59,8 @@ Dependencies
 
 TODO
 ====
-Add cubic splines
+Add monotonic interpolator
+Add cubic splines (+monotone)
 
 Notes
 =====
