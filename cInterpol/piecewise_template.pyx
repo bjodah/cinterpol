@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+#${_warning_in_the_generated_file_not_to_edit}
+
+
 import numpy as np
 cimport numpy as cnp
 from cpython cimport bool
