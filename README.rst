@@ -1,6 +1,8 @@
 =============
 cInterpol
 =============
+.. image:: https://travis-ci.org/bjodah/cinterpol.png?branch=master
+   :target: https://travis-ci.org/bjodah/cinterpol
 
 cInterpol_ is a python extension for optimized interpolation of
 data series where one for which each data knows a fixed number of derivatives 

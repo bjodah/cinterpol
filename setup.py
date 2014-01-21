@@ -79,7 +79,7 @@ else:
                 'options': ['openmp'],
                 #'libs': ['m']
             },
-            copy_files= ['./cInterpol/power.c'],
+            build_files= ['./cInterpol/power.c'],
         )
     ]
 
