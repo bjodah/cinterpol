@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
 #${_warning_in_the_generated_file_not_to_edit}
-
+<%doc>
+"""
+This file is a template rendered by setup.py
+It uses Mako syntax (www.makotemplates.org)
+"""
+</%doc>
 
 import numpy as np
 cimport numpy as cnp
@@ -9,7 +14,6 @@ from cpython cimport bool
 from newton_interval cimport get_interval, get_interval_from_guess, check_nan, check_strict_monotonicity
 
 # Note: Cython >=0.19 support const properly.
-
 
 %for token in tokens:
 %for wy in range(1,max_wy+1):
