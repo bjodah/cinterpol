@@ -29,6 +29,7 @@ if '--help'in sys.argv[1:] or sys.argv[1] in (
     cmdclass_ = {}
     ext_modules_ = []
 else:
+    import numpy
     from pycompilation.dist import clever_build_ext
     from pycompilation.dist import CleverExtension
     from cInterpol.model import models
@@ -58,7 +59,7 @@ else:
         CleverExtension(
             name_+".piecewise",
             sources=source_files,
-            include_dirs=[os.path.join(newton_interval_dir, 'include')],
+            include_dirs=[os.path.join(newton_interval_dir, 'include'), numpy.get_include()],
             template_regexps=[
                 (r'^(\w+)_template.(\w+)$', r'\1.\2', subsd),
             ],
@@ -80,6 +81,7 @@ else:
                 #'libs': ['m']
             },
             build_files= ['./cInterpol/power.c'],
+            logger=True,
         )
     ]
 

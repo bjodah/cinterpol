@@ -68,6 +68,7 @@ Dependencies
 
 TODO
 ====
+Some templates unnecessarily rerendered during setup.
 Add monotonic interpolator
 Add cubic splines (+monotone)
 
