@@ -5,7 +5,7 @@ cInterpol
    :target: https://travis-ci.org/bjodah/cinterpol
 
 cInterpol_ is a python extension for optimized interpolation of
-data series where one for which each data knows a fixed number of derivatives 
+data series where one for each data point knows a fixed number of derivatives 
 (currently supported number of derivates are 0, 1, 2).
 
 It provides a close to 6 orders of magnitude faster (albeit less general)
