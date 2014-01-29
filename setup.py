@@ -14,7 +14,7 @@ import sys
 from distutils.core import setup
 
 name_ = 'cInterpol'
-version_ = '0.3.3-dev'
+version_ = '0.3.3'
 
 
 pkg_dir = name_
@@ -59,7 +59,7 @@ else:
         CleverExtension(
             name_+".piecewise",
             sources=source_files,
-            include_dirs=[os.path.join(newton_interval_dir, 'include'), numpy.get_include()],
+            include_dirs=['./cInterpol', os.path.join(newton_interval_dir, 'include'), numpy.get_include()],
             template_regexps=[
                 (r'^(\w+)_template.(\w+)$', r'\1.\2', subsd),
             ],
@@ -80,7 +80,6 @@ else:
                 'options': ['openmp'],
                 #'libs': ['m']
             },
-            build_files= ['./cInterpol/power.c'],
             logger=True,
         )
     ]

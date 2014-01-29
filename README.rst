@@ -30,7 +30,7 @@ Installation
 Example using pip (modify to your own needs):
 
     1. ``pip install --user --upgrade -r https://raw.github.com/bjodah/cinterpol/master/requirements.txt``
-    2. ``pip install --user --upgrade https://github.com/bjodah/cinterpol/archive/v0.3.2.tar.gz``
+    2. ``pip install --user --upgrade https://github.com/bjodah/cinterpol/archive/v0.3.3.tar.gz``
 
 Manual installation:
     1. Clone repository ``git clone https://github.com/bjodah/cinterpol.git``
