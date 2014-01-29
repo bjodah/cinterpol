@@ -81,7 +81,7 @@ where the repo "newton_interval" is https://github.com/bjodah/newton_interval.gi
 
 License
 =======
-Open Soucrce. Released under the very permissive "simplified
+Open Source. Released under the very permissive "simplified
 (2-clause) BSD license". See LICENSE.txt for further details.
 
 Author
