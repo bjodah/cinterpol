@@ -38,7 +38,7 @@ static double power(const double num, const int exp) {
 	result *= num;
 	return result;
     default:
-	result = pow(num, exp/2);
+	result = power(num, exp/2);
 	result *= result;
 	if ((exp%2) == 1) result *= num;
 	return result;
