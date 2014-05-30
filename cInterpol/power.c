@@ -12,7 +12,7 @@
 
 static double power(const double num, const int exp) {
     // should be fast! (watch out for underflow/overflow)
-    if (exp < 0) return 1.0/pow(num, -exp);
+    if (exp < 0) return 1.0/power(num, -exp);
     double result;
     switch (exp){
     case 0:

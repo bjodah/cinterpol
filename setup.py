@@ -36,8 +36,8 @@ else:
     from cInterpol.codeexport import ModelCode
     newton_interval_c_src = os.path.join(newton_interval_dir, 'src', 'newton_interval.c')
     source_files = [
-        newton_interval_c_src,
         os.path.join(pkg_dir, 'piecewise_template.pyx'),
+        newton_interval_c_src,
     ]
 
     for token in model_tokens:
