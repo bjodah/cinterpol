@@ -6,8 +6,8 @@ import re
 from collections import defaultdict
 
 # external imports
-from pycompilation.codeexport import C_Code, DummyGroup, ArrayifyGroup
-from pycompilation.util import render_mako_template_to
+from pycodeexport.codeexport import C_Code, DummyGroup, ArrayifyGroup
+from pycodeexport.util import render_mako_template_to
 
 # project internal imports
 from cInterpol.model import models

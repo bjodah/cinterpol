@@ -12,6 +12,7 @@ TAGS
 */*.so
 */build/
 build/
+.cache/
 cInterpol/piecewise_*.c
 cInterpol/coeff.*
 cInterpol/eval.*
