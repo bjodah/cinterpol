@@ -13,6 +13,7 @@ TAGS
 */build/
 build/
 .cache/
+*.egg-info/
 cInterpol/piecewise_*.c
 cInterpol/coeff.*
 cInterpol/eval.*
@@ -25,3 +26,5 @@ examples/*.pyc
 cInterpol/.meta_poly_coeff
 cInterpol/prebuilt/
 examples/build_invnewton/
+MANIFEST
+dist/
