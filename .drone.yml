@@ -1,5 +1,6 @@
 build:
   image: bjodah/bjodahimg16:v1.2
   commands:
+    - python2 setup.py build_ext -i
     - python3 setup.py build_ext -i
     - python3 -m pytest

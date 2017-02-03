@@ -42,17 +42,17 @@ def test_PiecewisePolynomial(args):
         poly = Polynomial(c=row)
         if ri==pw.c.shape[0]-1:
             # Last
-            ref = np.array(map(float, [poly.eval(0, i) for i in range(nc)]))
+            ref = np.array([poly.eval(0, i) for i in range(nc)], dtype=np.float64)
             assert np.allclose(y[ri, :], ref)
 
-            ref = np.array(map(float, [poly.eval(t[ri-1]-t[ri], i) for i in range(nc)]))
+            ref = np.array([poly.eval(t[ri-1]-t[ri], i) for i in range(nc)], dtype=np.float64)
             assert np.allclose(y[ri-1, :], ref)
         else:
             # Not last
-            ref = np.array(map(float, [poly.eval(0, i) for i in range(nc)]))
+            ref = np.array([poly.eval(0, i) for i in range(nc)], dtype=np.float64)
             assert np.allclose(y[ri, :], ref)
 
-            ref = np.array(map(float, [poly.eval(t[ri+1]-t[ri], i) for i in range(nc)]))
+            ref = np.array([poly.eval(t[ri+1]-t[ri], i) for i in range(nc)], dtype=np.float64)
             assert np.allclose(y[ri+1, :], ref)
 
 
