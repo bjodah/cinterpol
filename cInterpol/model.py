@@ -23,7 +23,7 @@ class Relation(object):
                       o in range(self.wy*2)]
         else:
             assert c != None
-            self.wy = len(c) / 2
+            self.wy = len(c) // 2
             self.c = c
 
 
@@ -68,10 +68,8 @@ class Pade(Relation):
 
     @property
     def expr(self):
-        l1 = sum([self.c[o]*self.x**o for\
-                    o in range(self.wy+1)])
-        l2 = sum([self.c[self.wy+o]*self.x**o for\
-                    o in range(1,self.wy)])
+        l1 = sum([self.c[o]*self.x**o for o in range(self.wy+1)])
+        l2 = sum([self.c[self.wy+o]*self.x**o for o in range(1, self.wy)])
         return l1/(1+l2)
 
 
